@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gráfico</title>
+</head>
+<body>
+    <h1>Gráfico de horas de cursos</h1>
+    <div id="chart"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.min.js"></script>
+    <script>
+        const data = {
+            labels: ['Teoría', 'Práctica', 'Laboratorio'],
+            datasets: [
+                {
+                    label: 'Horas',
+                    data: [{{ chart.theory_hours }}, {{ chart.practice_hours }}, {{ chart.laboratory_hours }}],
+                    backgroundColor: ['#ffff00', '#ff0000', '#ff8000'],
+                }
+            ]
+        };
+
+        const config = {
+            type: 'pie',
+            data: data,
+            options: {
+                title: {
+                    display: true,
+                    text: 'Distribución de horas de cursos'
+                },
+                tooltips: {
+                    enabled: true
+                }
+            }
+        };
+
+        const chart = new Chart(document.getElementById('chart'), config);
+    </script>
+</body>
+</html>
