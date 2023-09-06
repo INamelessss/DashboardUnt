@@ -53,7 +53,7 @@ def dashboard(request):
     if age:
         teachers = teachers.filter(birth=age)
     if modality:
-        teachers = teachers.filter(modality=modality)
+        teachers = teachers.filter(type=modality)
     if category:
         teachers = teachers.filter(category=category)
     if grade:
@@ -61,20 +61,26 @@ def dashboard(request):
     if school:
         teachers = teachers.filter(school=school)
 
-    # Calculate the degree and contract distribution
-    degree_distribution = teachers.values('status').annotate(count=Count('status')).order_by('-count')
-    contract_distribution = teachers.values('type').annotate(count=Count('type')).order_by('-count')
+    # Calculate the degree distribution
+    degree_distribution_data = teachers.values('status').annotate(count=Count('status')).order_by('-count')
+    degree_distribution = [{'label': data['status'], 'data': data['count']} for data in degree_distribution_data]
+
+    # Calculate the contract distribution
+    contract_distribution_data = teachers.values('type').annotate(count=Count('type')).order_by('-count')
+    contract_distribution = [{'label': data['type'], 'data': data['count']} for data in contract_distribution_data]
 
     # Calculate the number of teachers per school
-    teachers_per_school = teachers.values('school').annotate(count=Count('school')).order_by('-count')
+    teachers_per_school_data = teachers.values('school').annotate(count=Count('school')).order_by('-count')
+    teachers_per_school = [{'label': data['school'], 'data': data['count']} for data in teachers_per_school_data]
 
     # Calculate the average age of teachers
     average_age = teachers.aggregate(avg_age=Avg('birth'))['avg_age']
 
     context = {
-        'degree_distribution': degree_distribution,
-        'contract_distribution': contract_distribution,
-        'teachers_per_school': teachers_per_school,
+        'teachers': teachers,
+        'degree_data': degree_distribution,
+        'contract_data': contract_distribution,
+        'teachers_per_school_data': teachers_per_school,
         'average_age': average_age,
     }
 

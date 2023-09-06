@@ -13,124 +13,205 @@
 </head>
 <body>
     <div class="container">
-        <table>
-            <thead>
-              <tr>
-                <th>School</th>
-                <th>Surname and Names</th>
-                <th>Status</th>
-                <th>Manager</th>
-                <th>Type</th>
-                <th>Category</th>
-                <th>Grade</th>
-                <th>Birth</th>
-                <th>Income</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for teacher in teachers %}
-                <tr>
-                  <td>{{ teacher.school }}</td>
-                  <td>{{ teacher.surname_and_names }}</td>
-                  <td>{{ teacher.status }}</td>
-                  <td>{{ teacher.manager }}</td>
-                  <td>{{ teacher.type }}</td>
-                  <td>{{ teacher.category }}</td>
-                  <td>{{ teacher.grade }}</td>
-                  <td>{{ teacher.birth }}</td>
-                  <td>{{ teacher.income }}</td>
-                </tr>
-              {% empty %}
-                <tr>
-                  <td colspan="9">No teachers found.</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        <!-- First Pizza Graph (Degree Distribution) -->
-        <canvas id="degreeChart" width="400" height="400"></canvas>
+      <div class="row mt-5">
+        <div class="col-md-12">
+            <h3>Docentes</h3>
+            <form method="GET" action="">
 
-        <!-- Second Pizza Graph (Contract Distribution) -->
-        <canvas id="contractChart" width="400" height="400"></canvas>
+              <div class="row mt-3">
+                  <div class="col-md-4">
+                      <div class="form-group">
+                          <label>Edad:</label>
+                          <input type="text" name="age" class="form-control" value="{{ request.GET.age }}">
+                      </div>
+                  </div>
+                  <div class="col-md-4">
+                      <div class="form-group">
+                          <label>Modalidad:</label>
+                          <input type="text" name="modality" class="form-control" value="{{ request.GET.modality }}">
+                      </div>
+                  </div>
+                  <div class="col-md-4">
+                      <div class="form-group">
+                          <label>Categoria:</label>
+                          <input type="text" name="category" class="form-control" value="{{ request.GET.category }}">
+                      </div>
+                  </div>
+              </div>
 
-        <!-- Bar Graph (Teachers per School) -->
-        <canvas id="schoolChart" width="400" height="400"></canvas>
+              <div class="row">
+                  <div class="col-md-6">
+                      <div class="form-group">
+                          <label>Grado:</label>
+                          <input type="text" name="grade" class="form-control" value="{{ request.GET.grade }}">
+                      </div>
+                  </div>
+                  <div class="col-md-6">
+                      <div class="form-group">
+                          <label>Escuela:</label>
+                          <input type="text" name="school" class="form-control" value="{{ request.GET.school }}">
+                      </div>
+                  </div>
+              </div>
 
-        <!-- Average Age -->
-        <p>Average Age: {{ average_age }}</p>
-    </div>
+              <div class="row mt-3">
+                  <div class="col-md-12">
+                      <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+                  </div>
+              </div>
 
-    <script>
-        // First Pizza Graph (Degree Distribution)
-        var degreeCtx = document.getElementById('degreeChart').getContext('2d');
-        var degreeChart = new Chart(degreeCtx, {
-            type: 'pie',
-            data: {
-                labels: [
-                    'Does not Register',
-                    'Masters',
-                    'Doctors'
-                ],
-                datasets: [{
-                    data: [
-                        {% for degree in degree_distribution %}
-                            {{ degree.count }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: ['yellow', 'blue', 'green']
-                }]
-            }
-        });
-
-        // Second Pizza Graph (Contract Distribution)
-        var contractCtx = document.getElementById('contractChart').getContext('2d');
-        var contractChart = new Chart(contractCtx, {
-            type: 'pie',
-            data: {
-                labels: [
-                    'Contracted',
-                    'Main'
-                ],
-                datasets: [{
-                    data: [
-                        {% for contract in contract_distribution %}
-                            {{ contract.count }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: ['red', 'orange']
-                }]
-            }
-        });
-
-        // Bar Graph (Teachers per School)
-        var schoolCtx = document.getElementById('schoolChart').getContext('2d');
-        var schoolChart = new Chart(schoolCtx, {
-            type: 'bar',
-            data: {
-                labels: [
-                    {% for teachers_school in teachers_per_school %}
-                        '{{ teachers_school.school }}',
+          </form>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Escuela</th>
+                        <th>Apellidos y nombres</th>
+                        <th>Condición</th>
+                        <th>Modalidad</th>
+                        <th>Categoria</th>
+                        <th>Grado</th>
+                        <th>Fecha de nacimiento</th>
+                        <th>Fecha de ingreso</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for teacher in teachers %}
+                        <tr>
+                            <td>{{ teacher.school }}</td>
+                            <td>{{ teacher.surname_and_names }}</td>
+                            <td>{{ teacher.status }}</td>
+                            <td>{{ teacher.type }}</td>
+                            <td>{{ teacher.category }}</td>
+                            <td>{{ teacher.grade }}</td>
+                            <td>{{ teacher.birth }}</td>
+                            <td>{{ teacher.income }}</td>
+                        </tr>
                     {% endfor %}
-                ],
-                datasets: [{
-                    label: 'Teachers per School',
-                    data: [
-                        {% for teachers_school in teachers_per_school %}
-                            {{ teachers_school.count }},
-                        {% endfor %}
-                    ],
-                    backgroundColor: 'blue'
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        precision: 0
-                    }
-                }
-            }
+                </tbody>
+            </table>
+        </div>
+    </div>
+        <div class="row">
+          <div class="col-md-6">
+            <h3>Distribucion por condición</h3>
+            <canvas id="degreeChart"></canvas>
+          </div>
+          <div class="col-md-6">
+            <h3>Distribución por contrato</h3>
+            <canvas id="contractChart"></canvas>
+          </div>
+        </div>
+
+        <div class="row mt-5">
+          <div class="col-md-12">
+            <h3>Docentes por escuela</h3>
+            <canvas id="teachersPerSchoolChart"></canvas>
+          </div>
+        </div>
+
+        <div class="row mt-5">
+          <div class="col-md-12">
+            <h3>Edad promedio de los profesores</h3>
+            <p>43</p>
+          </div>
+        </div>
+      </div>
+
+      <script>
+
+        var degreeData = [
+        {% for degree in degree_data %}
+          {
+            label: "{{ degree.label }}",
+            data: {{ degree.data }},
+            backgroundColor: getRandomColor(),
+            borderColor: getRandomColor(),
+            borderWidth: 1
+          },
+        {% endfor %}
+      ];
+
+        // Create a pie chart for degree distribution
+        var degreeChart = new Chart(document.getElementById('degreeChart'), {
+          type: 'pie',
+          data: {
+            datasets: [{
+              data: degreeData.map(degree => degree.data),
+              backgroundColor: degreeData.map(degree => degree.backgroundColor),
+              borderColor: degreeData.map(degree => degree.borderColor)
+            }],
+            labels: degreeData.map(degree => degree.label),
+          },
         });
-    </script>
+
+        // Get the data for contract distribution
+        var contractData = [
+        {% for contract in contract_data %}
+          {
+            label: "{{ contract.label }}",
+            data: {{ contract.data }},
+            backgroundColor: getRandomColor(),
+            borderColor: getRandomColor(),
+            borderWidth: 1
+          },
+        {% endfor %}
+      ];
+
+        // Create a pie chart for contract distribution
+        var contractChart = new Chart(document.getElementById('contractChart'), {
+          type: 'pie',
+          data: {
+            datasets: [{
+              data: contractData.map(contract => contract.data),
+              backgroundColor: contractData.map(contract => contract.backgroundColor),
+              borderColor: contractData.map(contract => contract.borderColor)
+            }],
+            labels: contractData.map(contract => contract.label),
+          },
+        });
+
+        // Get the data for teachers per school
+        var teachersPerSchoolData = [
+        {% for teachers_per_school in teachers_per_school_data %}
+          {
+            label: "{{ teachers_per_school.label }}",
+            data: {{ teachers_per_school.data }},
+            backgroundColor: getRandomColor(),
+            borderColor: getRandomColor(),
+            borderWidth: 1
+          },
+        {% endfor %}
+      ];
+
+        // Create a bar chart for teachers per school
+        var teachersPerSchoolChart = new Chart(document.getElementById('teachersPerSchoolChart'), {
+          type: 'bar',
+          data: {
+            datasets: [{
+              data: teachersPerSchoolData.map(school => school.data),
+              backgroundColor: teachersPerSchoolData.map(school => school.backgroundColor),
+              borderColor: teachersPerSchoolData.map(school => school.borderColor)
+            }],
+            labels: teachersPerSchoolData.map(school => school.label),
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+
+        // Function to generate random colors for the charts
+        function getRandomColor() {
+          var letters = '0123456789ABCDEF';
+          var color = '#';
+          for (var i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+          }
+          return color;
+        }
+      </script>
 </body>
 </html>
