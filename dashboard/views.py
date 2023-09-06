@@ -1,6 +1,7 @@
 from django.shortcuts import render
-from .models import Course
+from .models import Course, Teacher
 from django.db import models
+from django.db.models import Count, Avg
 from django.db.models import Sum
 
 def course_list(request):
@@ -36,3 +37,45 @@ def course_list(request):
         'chart_data': chart_data,
     }
     return render(request, 'cursos/course_list.html', context)
+
+
+def dashboard(request):
+    # Apply filters if present in the request parameters
+    age = request.GET.get('age')
+    modality = request.GET.get('modality')
+    category = request.GET.get('category')
+    grade = request.GET.get('grade')
+    school = request.GET.get('school')
+
+    # Retrieve the filtered data from the database
+    teachers = Teacher.objects.all()
+
+    if age:
+        teachers = teachers.filter(birth=age)
+    if modality:
+        teachers = teachers.filter(modality=modality)
+    if category:
+        teachers = teachers.filter(category=category)
+    if grade:
+        teachers = teachers.filter(grade=grade)
+    if school:
+        teachers = teachers.filter(school=school)
+
+    # Calculate the degree and contract distribution
+    degree_distribution = teachers.values('status').annotate(count=Count('status')).order_by('-count')
+    contract_distribution = teachers.values('type').annotate(count=Count('type')).order_by('-count')
+
+    # Calculate the number of teachers per school
+    teachers_per_school = teachers.values('school').annotate(count=Count('school')).order_by('-count')
+
+    # Calculate the average age of teachers
+    average_age = teachers.aggregate(avg_age=Avg('birth'))['avg_age']
+
+    context = {
+        'degree_distribution': degree_distribution,
+        'contract_distribution': contract_distribution,
+        'teachers_per_school': teachers_per_school,
+        'average_age': average_age,
+    }
+
+    return render(request, 'dashboard.html', context)

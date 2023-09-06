@@ -20,4 +20,5 @@ from dashboard import views
 urlpatterns = [
     path('course_list/', views.course_list, name='course_list'),
     path("__debug__/", include("debug_toolbar.urls")),
+    path('dashboard/', views.dashboard, name='dashboard'),
 ]
