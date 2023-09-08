@@ -10,7 +10,14 @@
                   <div class="col-md-4">
                       <div class="form-group">
                           <label>Edad:</label>
-                          <input type="text" name="age" class="form-control" value="{{ request.GET.age }}">
+                          <select class="form-control" name="age" id="age">
+                            <option value="">All</option>
+                            <option value="21-30 years">21-30 years</option>
+                            <option value="31-40 years">31-40 years</option>
+                            <option value="41-50 years">41-50 years</option>
+                            <option value="51-60 years">51-60 years</option>
+                            <option value="61+ years">61+ years</option>
+                        </select>
                       </div>
                   </div>
                   <div class="col-md-4">
@@ -76,7 +83,7 @@
         <div class="row mt-5">
           <div class="col-md-12">
             <h3>Edad promedio de los profesores</h3>
-            <p>43</p>
+            <p>{{ average_age }}</p>
           </div>
         </div>
       </div>
@@ -91,8 +98,8 @@
                     <th>Modalidad</th>
                     <th>Categoria</th>
                     <th>Grado</th>
-                    <th>Fecha de nacimiento</th>
-                    <th>Fecha de ingreso</th>
+                    <th>Edad</th>
+                    <th>Años de trabajo</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -104,8 +111,8 @@
                     <td>{{ teacher.type }}</td>
                     <td>{{ teacher.category }}</td>
                     <td>{{ teacher.grade }}</td>
-                    <td>{{ teacher.birth }}</td>
-                    <td>{{ teacher.income }}</td>
+                    <td>{{ teacher.age }}</td>
+                    <td>{{ teacher.work }}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -170,7 +177,7 @@
         {% for teachers_per_school in teachers_per_school_data %}
           {
             label: "{{ teachers_per_school.label }}",
-            data: {{ teachers_per_school.data }},
+            data: [{{ teachers_per_school.data | safe }}],
             backgroundColor: getRandomColor(),
             borderColor: getRandomColor(),
             borderWidth: 1
@@ -178,26 +185,56 @@
         {% endfor %}
       ];
 
-        // Create a bar chart for teachers per school
-        var teachersPerSchoolChart = new Chart(document.getElementById('teachersPerSchoolChart'), {
-          type: 'bar',
-          data: {
-            datasets: [{
-              label: teachersPerSchoolData.map(school => school.label),
-              data: teachersPerSchoolData.map(school => school.data),
-              backgroundColor: teachersPerSchoolData.map(school => school.backgroundColor),
-              borderColor: teachersPerSchoolData.map(school => school.borderColor)
-            }],
-            labels: teachersPerSchoolData.map(school => school.label),
-          },
-          options: {
-            scales: {
-              y: {
+      // Create a custom plugin
+      Chart.plugins.register({
+        afterDraw: function(chart) {
+          var ctx = chart.chart.ctx;
+          ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontSize, Chart.defaults.global.defaultFontStyle, Chart.defaults.global.defaultFontFamily);
+          ctx.fillStyle = Chart.defaults.global.defaultFontColor;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+
+          chart.data.datasets.forEach(function(dataset, datasetIndex) {
+            for (var i = 0; i < dataset.data.length; i++) {
+              var model = dataset._meta[Object.keys(dataset._meta)[0]].data[i]._model;
+              var label = dataset.data[i].toString();
+
+              // Adjust the y position and offset based on your preferences
+              ctx.fillText(label, model.x, model.y - 5); // Offset the label a bit
+            }
+          });
+        }
+      });
+
+      // Create a bar chart for teachers per school
+      var teachersPerSchoolChart = new Chart(document.getElementById('teachersPerSchoolChart'), {
+        type: 'bar',
+        data: {
+          datasets: [{
+            label: 'Profesores por Escuela',
+            data: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.data),
+            backgroundColor: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.backgroundColor),
+            borderColor: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.borderColor),
+            borderWidth: 1, // Agrega esta línea para establecer el ancho de la línea de borde en 1
+            fill: false, // Agrega esta línea para evitar rellenar el área sobre la línea
+          }],
+          labels: [
+            {% for teachers_per_school in teachers_per_school_data %}
+              "{{ teachers_per_school.label }}",
+            {% endfor %}
+          ],
+        },
+        options: {
+          scales: {
+            yAxes: [{
+              ticks: {
                 beginAtZero: true,
-              },
-            },
-          },
-        });
+                stepSize: 1
+              }
+            }]
+          }
+        }
+      });
 
         // Function to generate random colors for the charts
         function getRandomColor() {

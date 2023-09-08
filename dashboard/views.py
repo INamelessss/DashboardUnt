@@ -3,6 +3,8 @@ from .models import Course, Teacher
 from django.db import models
 from django.db.models import Count, Avg
 from django.db.models import Sum
+from datetime import date, datetime
+from django.db.models.functions import ExtractYear
 
 def course_list(request):
     # Get query parameters from request URL
@@ -40,18 +42,45 @@ def course_list(request):
 
 
 def dashboard(request):
-    # Apply filters if present in the request parameters
-    age = request.GET.get('age')
+    age_range = request.GET.get('age')
     modality = request.GET.get('modality')
     category = request.GET.get('category')
     grade = request.GET.get('grade')
     school = request.GET.get('school')
 
-    # Retrieve the filtered data from the database
+    current_year = date.today().year
+
+    age_mapping = {
+        '21-30 years': '21-30',
+        '31-40 years': '31-40',
+        '41-50 years': '41-50',
+        '51-60 years': '51-60',
+        '61+ years': '61+',
+    }
+
     teachers = Teacher.objects.all()
 
-    if age:
-        teachers = teachers.filter(birth=age)
+    teachers = Teacher.objects.annotate(
+        work=current_year - ExtractYear('income'),
+        age=current_year - ExtractYear('birth'),
+    )
+    teachers = teachers.exclude(birth__isnull=True)
+
+    if age_range:
+        if '-' in age_range:
+            start_age, end_age = age_range.split('-')
+            start_age = start_age.replace('years', '').strip()
+            end_age = end_age.replace('years', '').strip()
+        else:
+            start_age = '61'
+            end_age = '120'
+
+        if start_age and end_age:
+            current_year = date.today().year
+            start_birth_year = current_year - int(end_age) - 1
+            end_birth_year = current_year - int(start_age)
+
+            teachers = teachers.filter(birth__year__range=(start_birth_year, end_birth_year))
     if modality:
         teachers = teachers.filter(type=modality)
     if category:
@@ -74,7 +103,7 @@ def dashboard(request):
     teachers_per_school = [{'label': data['school'], 'data': data['count']} for data in teachers_per_school_data]
 
     # Calculate the average age of teachers
-    average_age = teachers.aggregate(avg_age=Avg('birth'))['avg_age']
+    average_age = teachers.aggregate(avg_age=Avg('age'))['avg_age']
 
     context = {
         'teachers': teachers,
