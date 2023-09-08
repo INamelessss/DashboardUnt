@@ -40,6 +40,9 @@
         .container {
             margin-top: 20px; /* Espacio superior para separar el contenido del Navbar */
         }
+        .highlight {
+                background-color: yellow;
+        }
 
         /* Agrega más estilos personalizados según tus preferencias */
     </style>
@@ -60,7 +63,7 @@
                 <a class="nav-link" href="{% url 'dashboard' %}">Docentes</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{% url 'dashboard' %}">Horarios</a>
+                <a class="nav-link" href="{% url 'horario' %}">Horarios</a>
             </li>
         </ul>
     </div>

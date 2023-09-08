@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Course, Teacher
+from .models import Course, CourseModel, Teacher
 from django.db import models
 from django.db.models import Count, Avg
 from django.db.models import Sum
@@ -114,3 +114,32 @@ def dashboard(request):
     }
 
     return render(request, 'dashboard.html', context)
+
+def schedule_view(request):
+    if request.method == 'POST':
+        selected_school = request.POST['school']
+        selected_cycle = request.POST['cycle']
+        selected_career = request.POST['career']
+
+        courses = CourseModel.objects.filter(headquarters=selected_school, cycle=selected_cycle, career=selected_career)
+
+        schools = CourseModel.objects.values_list('headquarters', flat=True).distinct()
+        cycles = CourseModel.objects.values_list('cycle', flat=True).distinct()
+        careers = CourseModel.objects.values_list('career', flat=True).distinct()
+    else:
+        schools = CourseModel.objects.values_list('headquarters', flat=True).distinct()
+        cycles = CourseModel.objects.values_list('cycle', flat=True).distinct()
+        careers = CourseModel.objects.values_list('career', flat=True).distinct()
+
+        courses = CourseModel.objects.all()
+
+    # Generate hours range
+    hours_range = []
+    start_hour = 7
+    end_hour = 22
+    for hour in range(start_hour, end_hour + 1):
+        hours_range.append('{:02d}:00'.format(hour))
+
+    courses = courses.prefetch_related('courseschedule_set')
+
+    return render(request, 'schedule.html', {'courses': courses, 'schools': schools, 'cycles': cycles, 'hours_range': hours_range, 'careers':careers})

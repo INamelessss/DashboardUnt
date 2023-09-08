@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<body>
+    <form method="post">
+        {% csrf_token %}
+        <label for="school">Sede:</label>
+        <select name="school" id="school">
+            <option value="">Seleccione una opción</option>
+            {% for school in schools %}
+                <option value="{{ school }}">{{ school }}</option>
+            {% endfor %}
+        </select>
+        <label for="cycle">Ciclo:</label>
+        <select name="cycle" id="cycle">
+            <option value="">Seleccione una opción</option>
+            {% for cycle in cycles %}
+                <option value="{{ cycle }}">{{ cycle }}</option>
+            {% endfor %}
+        </select>
+        <label for="career">Escuela:</label>
+        <select name="career" id="career">
+            <option value="">Seleccione una opción</option>
+            {% for career in careers %}
+                <option value="{{ career }}">{{ career }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Aplicar filtros</button>
+    </form>
+    <br>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Hora/Días</th>
+                <th>Lunes</th>
+                <th>Martes</th>
+                <th>Miércoles</th>
+                <th>Jueves</th>
+                <th>Viernes</th>
+                <th>Sábado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in hours_range %}
+                <tr>
+                    <td>{{ i }}</td>
+                    <td id="monday-{{ i }}"></td>
+                    <td id="tuesday-{{ i }}"></td>
+                    <td id="wednesday-{{ i }}"></td>
+                    <td id="thursday-{{ i }}"></td>
+                    <td id="friday-{{ i }}"></td>
+                    <td id="saturday-{{ i }}"></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Semestre</th>
+                <th>Sede</th>
+                <th>Ciclo</th>
+                <th>Sección</th>
+                <th>Carrera</th>
+                <th>Curso</th>
+                <th>Horas</th>
+                <th>Días</th>
+                <th>Aula</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for course in courses %}
+                <tr data-course-id="{{ course.id }}">
+                    <td>{{ course.semester }}</td>
+                    <td>{{ course.headquarters }}</td>
+                    <td>{{ course.cycle }}</td>
+                    <td>{{ course.section }}</td>
+                    <td>{{ course.career }}</td>
+                    <td>{{ course.course }}</td>
+                    <td>{{ course.hours }}</td>
+                    <td>
+                        {% for schedule in course.courseschedule_set.all %}
+                            {{ schedule.day }}: {{ schedule.start_time }} - {{ schedule.end_time }}<br>
+                        {% empty %}
+                            Horario no disponible
+                        {% endfor %}
+                    </td>
+                    <td>{{ course.classroom }}</td>
+                    <td>
+                        <button class="show-schedule" data-course-id="{{ course.id }}">Mostrar horario</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const buttons = document.getElementsByClassName('show-schedule');
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].addEventListener('click', (event) => {
+                    const courseId = event.target.dataset.course;
+                    const course = document.querySelector(`tr[data-course-id="${courseId}"]`);
+
+                    if (!course) {
+                        console.error('Course element not found.');
+                        return;
+                    }
+
+                    const cells = course.querySelectorAll('td');
+                    if (!cells || cells.length === 0) {
+                        console.error('Cells not found.');
+                        return;
+                    }
+
+                    // Clear existing highlights
+                    document.querySelectorAll('.highlight').forEach((cell) => {
+                        cell.classList.remove('highlight');
+                    });
+
+                    // Mark the cells based on the course's schedules
+                    for (let j = 0; j < cells.length; j++) {
+                        const cell = cells[j];
+                        const hourIndex = parseInt(cell.id.split('-')[1]);
+                        const dayIndex = j + 1;
+
+                        {% for course in courses %}
+                            {% if course.id == courseId %}
+                                {% for schedule in course.courseschedule_set.all %}
+                                    if (schedule.day.toLowerCase() === days[dayIndex - 1]) {
+                                        const startHours = schedule.start_time.split(':')[0];
+                                        const endHours = schedule.end_time.split(':')[0];
+
+                                        if (hourIndex >= parseInt(startHours) && hourIndex <= parseInt(endHours)) {
+                                            cell.innerText = "{{ course.course }}";
+                                            cell.classList.add('highlight');
+                                        }
+                                    }
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    }
+                });
+            }
+        });
+
+    </script>
+</body>
+
+
+{% endblock %}

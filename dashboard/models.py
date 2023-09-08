@@ -11,30 +11,6 @@ class Course(models.Model):
     hp = models.IntegerField()
     hl = models.IntegerField()
 
-Course.objects.create(
-    school='SISTEMAS',
-    code='6570',
-    name='INGENIERIA GRAFICA',
-    type='ELECTIVO',
-    credits=3,
-    cycle='III',
-    ht=2,
-    hp=0,
-    hl=3,
-)
-
-Course.objects.create(
-    school='SISTEMAS',
-    code='4503',
-    name='APLICACIONES MOVILES',
-    type='OBLIGATORIO',
-    credits=3,
-    cycle='X',
-    ht=2,
-    hp=2,
-    hl=2,
-)
-
 class Teacher(models.Model):
     STATUS_CHOICES = (
         ('Does not register', 'Does not register'),
@@ -55,3 +31,51 @@ class Teacher(models.Model):
     grade = models.CharField(max_length=100)
     birth = models.DateField()
     income = models.DateField()
+
+class CourseModel(models.Model):
+    SEMESTER_CHOICES = [
+        ('Spring', 'Spring'),
+        ('Summer', 'Summer'),
+        ('Fall', 'Fall'),
+    ]
+    HEADQUARTERS_CHOICES = [
+        ('Headquarters A', 'Headquarters A'),
+        ('Headquarters B', 'Headquarters B'),
+        ('Headquarters C', 'Headquarters C'),
+    ]
+    CYCLE_CHOICES = [
+        ('Cycle 1', 'Cycle 1'),
+        ('Cycle 2', 'Cycle 2'),
+        ('Cycle 3', 'Cycle 3'),
+    ]
+
+    semester = models.CharField(max_length=20, choices=SEMESTER_CHOICES)
+    headquarters = models.CharField(max_length=20, choices=HEADQUARTERS_CHOICES)
+    cycle = models.CharField(max_length=20, choices=CYCLE_CHOICES)
+    section = models.CharField(max_length=1)
+    career = models.CharField(max_length=50)
+    course = models.CharField(max_length=50)
+    hours = models.IntegerField()
+    classroom = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.course
+
+class CourseSchedule(models.Model):
+    DAYS_OF_WEEK = [
+        ('Monday', 'Monday'),
+        ('Tuesday', 'Tuesday'),
+        ('Wednesday', 'Wednesday'),
+        ('Thursday', 'Thursday'),
+        ('Friday', 'Friday'),
+        ('Saturday', 'Saturday'),
+        ('Sunday', 'Sunday'),
+    ]
+
+    course_model = models.ForeignKey(CourseModel, on_delete=models.CASCADE, default=1)
+    day = models.CharField(max_length=20, choices=DAYS_OF_WEEK)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+
+    def __str__(self):
+        return f"{self.course} - {self.day}: {self.start_time} - {self.end_time}"
