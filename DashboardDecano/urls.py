@@ -21,5 +21,6 @@ urlpatterns = [
     path('course_list/', views.course_list, name='course_list'),
     path("__debug__/", include("debug_toolbar.urls")),
     path('dashboard/', views.dashboard, name='dashboard'),
-    path('horario/', views.schedule_view, name='horario')
+    path('horario/', views.schedule_view, name='horario'),
+    path('research/', views.research_analysis, name='research')
 ]

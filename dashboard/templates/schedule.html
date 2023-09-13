@@ -1,78 +1,114 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<body>
-    <form method="post">
+<div class="container mt-5">
+    <h1>Horarios</h1>
+    <form method="post" id="filter-form">
         {% csrf_token %}
-        <label for="school">Sede:</label>
-        <select name="school" id="school">
-            <option value="">Seleccione una opción</option>
-            {% for school in schools %}
-                <option value="{{ school }}">{{ school }}</option>
-            {% endfor %}
-        </select>
-        <label for="cycle">Ciclo:</label>
-        <select name="cycle" id="cycle">
-            <option value="">Seleccione una opción</option>
-            {% for cycle in cycles %}
-                <option value="{{ cycle }}">{{ cycle }}</option>
-            {% endfor %}
-        </select>
-        <label for="career">Escuela:</label>
-        <select name="career" id="career">
-            <option value="">Seleccione una opción</option>
-            {% for career in careers %}
-                <option value="{{ career }}">{{ career }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit">Aplicar filtros</button>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="school">Sede:</label>
+                    <select name="school" id="school" class="form-control">
+                        <option value="">Seleccione una opción</option>
+                        {% for school in schools %}
+                        <option value="{{ school }}" class="filter-option">{{ school }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="career">Escuela:</label>
+                    <select name="career" id="career" class="form-control">
+                        <option value="">Seleccione una opción</option>
+                        {% for career in careers %}
+                        <option value="{{ career }}" class="filter-option">{{ career }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="cycle">Ciclo:</label>
+                    <select name="cycle" id="cycle" class="form-control">
+                        <option value="">Seleccione una opción</option>
+                        {% for cycle in cycles %}
+                        <option value="{{ cycle }}" class="filter-option">{{ cycle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-12 text-center mt-3">
+                <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+            </div>
+        </div>
     </form>
-    <br>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Hora/Días</th>
-                <th>Lunes</th>
-                <th>Martes</th>
-                <th>Miércoles</th>
-                <th>Jueves</th>
-                <th>Viernes</th>
-                <th>Sábado</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for i in hours_range %}
+    <div class="table-responsive mt-4">
+        <table class="table table-bordered">
+            <thead class="bg-primary text-white">
                 <tr>
-                    <td>{{ i }}</td>
-                    <td id="monday-{{ i }}"></td>
-                    <td id="tuesday-{{ i }}"></td>
-                    <td id="wednesday-{{ i }}"></td>
-                    <td id="thursday-{{ i }}"></td>
-                    <td id="friday-{{ i }}"></td>
-                    <td id="saturday-{{ i }}"></td>
+                    <th>Hora/Días</th>
+                    <th>Lunes</th>
+                    <th>Martes</th>
+                    <th>Miércoles</th>
+                    <th>Jueves</th>
+                    <th>Viernes</th>
+                    <th>Sábado</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <br>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Semestre</th>
-                <th>Sede</th>
-                <th>Ciclo</th>
-                <th>Sección</th>
-                <th>Carrera</th>
-                <th>Curso</th>
-                <th>Horas</th>
-                <th>Días</th>
-                <th>Aula</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for course in courses %}
+            </thead>
+            <tbody>
+                {% for i in hours_range %}
+                    <tr>
+                        <td>{{ i }}</td>
+                        {% for day in days_of_week %}
+                            <td id="{{ day }}-{{ i }}" class="schedule-cell position-relative">
+                                {% for course in courses %}
+                                    {% for schedule in course.courseschedule_set.all %}
+                                        {% if schedule %}
+                                            {% if schedule.day == day %}
+                                                {% with schedule.start_time|time:"H:i" as start_hour %}
+                                                    {% with schedule.end_time|time:"H:i" as end_hour %}
+                                                        {% if i >= start_hour and i < end_hour %}
+                                                            <div class="course-box" style="background-color: {{ course.color }};">
+                                                                <span class="course-title">{{ course.course }}</span>
+                                                                <div class="course-details">
+                                                                    Sección:{{ course.section }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Aula: {{ course.classroom }}
+                                                                </div>
+                                                            </div>
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                {% endwith %}
+                                            {% endif %}
+                                        {% endif%}
+                                    {% endfor %}
+                                {% endfor %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-responsive mt-4">
+        <table class="table table-bordered">
+            <thead class="bg-primary text-white">
+                <tr>
+                    <th>Semestre</th>
+                    <th>Sede</th>
+                    <th>Ciclo</th>
+                    <th>Sección</th>
+                    <th>Carrera</th>
+                    <th>Curso</th>
+                    <th>Horas</th>
+                    <th>Días</th>
+                    <th>Aula</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in courses %}
                 <tr data-course-id="{{ course.id }}">
                     <td>{{ course.semester }}</td>
                     <td>{{ course.headquarters }}</td>
@@ -83,73 +119,41 @@
                     <td>{{ course.hours }}</td>
                     <td>
                         {% for schedule in course.courseschedule_set.all %}
-                            {{ schedule.day }}: {{ schedule.start_time }} - {{ schedule.end_time }}<br>
+                            {% with schedule.start_time as start_time %}
+                                {% with schedule.end_time as end_time %}
+                                    {% if schedule.day == 'Monday' %}
+                                    Lunes:
+                                    {% elif schedule.day == 'Tuesday' %}
+                                    Martes:
+                                    {% elif schedule.day == 'Wednesday' %}
+                                    Miércoles:
+                                    {% elif schedule.day == 'Thursday' %}
+                                    Jueves:
+                                    {% elif schedule.day == 'Friday' %}
+                                    Viernes:
+                                    {% elif schedule.day == 'Saturday' %}
+                                    Sábado:
+                                    {% elif schedule.day == 'Sunday' %}
+                                    Domingo:
+                                    {% endif %}
+
+                                    {% if start_time|time:"H" >= 12 %}
+                                    {{ start_time|time:"g:i A" }} - {{ end_time|time:"g:i A" }}<br>
+                                    {% else %}
+                                    {{ start_time|time:"g:i a" }} - {{ end_time|time:"g:i a" }}<br>
+                                    {% endif %}
+                                {% endwith %}
+                            {% endwith %}
                         {% empty %}
                             Horario no disponible
                         {% endfor %}
                     </td>
                     <td>{{ course.classroom }}</td>
-                    <td>
-                        <button class="show-schedule" data-course-id="{{ course.id }}">Mostrar horario</button>
-                    </td>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <script>
-        window.addEventListener('DOMContentLoaded', (event) => {
-            const buttons = document.getElementsByClassName('show-schedule');
-            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-
-            for (let i = 0; i < buttons.length; i++) {
-                buttons[i].addEventListener('click', (event) => {
-                    const courseId = event.target.dataset.course;
-                    const course = document.querySelector(`tr[data-course-id="${courseId}"]`);
-
-                    if (!course) {
-                        console.error('Course element not found.');
-                        return;
-                    }
-
-                    const cells = course.querySelectorAll('td');
-                    if (!cells || cells.length === 0) {
-                        console.error('Cells not found.');
-                        return;
-                    }
-
-                    // Clear existing highlights
-                    document.querySelectorAll('.highlight').forEach((cell) => {
-                        cell.classList.remove('highlight');
-                    });
-
-                    // Mark the cells based on the course's schedules
-                    for (let j = 0; j < cells.length; j++) {
-                        const cell = cells[j];
-                        const hourIndex = parseInt(cell.id.split('-')[1]);
-                        const dayIndex = j + 1;
-
-                        {% for course in courses %}
-                            {% if course.id == courseId %}
-                                {% for schedule in course.courseschedule_set.all %}
-                                    if (schedule.day.toLowerCase() === days[dayIndex - 1]) {
-                                        const startHours = schedule.start_time.split(':')[0];
-                                        const endHours = schedule.end_time.split(':')[0];
-
-                                        if (hourIndex >= parseInt(startHours) && hourIndex <= parseInt(endHours)) {
-                                            cell.innerText = "{{ course.course }}";
-                                            cell.classList.add('highlight');
-                                        }
-                                    }
-                                {% endfor %}
-                            {% endif %}
-                        {% endfor %}
-                    }
-                });
-            }
-        });
-
-    </script>
-</body>
-
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
 {% endblock %}

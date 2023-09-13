@@ -74,8 +74,18 @@ class CourseSchedule(models.Model):
 
     course_model = models.ForeignKey(CourseModel, on_delete=models.CASCADE, default=1)
     day = models.CharField(max_length=20, choices=DAYS_OF_WEEK)
+    type = models.CharField(max_length=50)
     start_time = models.TimeField()
     end_time = models.TimeField()
 
     def __str__(self):
         return f"{self.course} - {self.day}: {self.start_time} - {self.end_time}"
+
+class Research(models.Model):
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    code = models.CharField(max_length=20)
+    title = models.CharField(max_length=100)
+    type_of_research = models.CharField(max_length=100)
+    research_line = models.CharField(max_length=100)
+    sub_line = models.CharField(max_length=100)
+    budget = models.DecimalField(max_digits=10, decimal_places=2)

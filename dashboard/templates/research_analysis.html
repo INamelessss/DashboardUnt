@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Participación de Docentes por Escuela</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <canvas id="school-chart" width="200" height="200"></canvas>
+        </div>
+        <div class="col-md-4">
+            <canvas id="type-chart" width="200" height="200"></canvas>
+        </div>
+        <div class="col-md-4">
+            <canvas id="condition-chart" width="200" height="200"></canvas>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Número total de Proyectos</h5>
+                    <h3 class="card-text">{{ total_projects }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Presupuesto total</h5>
+                    <h3 class="card-text">${{ total_budget }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <h2>Detalles de Proyectos de Investigación</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Título</th>
+                            <th>Nombres y Apellidos</th>
+                            <th>Tipo de Investigador</th>
+                            <th>Condición del Investigador</th>
+                            <th>Rol</th>
+                            <th>Departamento Académico</th>
+                            <th>Tipo de Investigación</th>
+                            <th>Línea de Investigación</th>
+                            <th>Sub-Línea</th>
+                            <th>Presupuesto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>473232201121</td>
+                            <td>ANÁLISIS COMPARATIVO DE LOS TIEMPOS Y COSTOS EN LA GESTIÓN DE EDIFICIOS MULTIFAMILIARES MEDIANTE BUILDING INFORMATION MODELING (BIM) Y LA METODOLOGÍA TRADICIONAL, TRUJILLO, 2022.</td>
+                            <td>JOSUALDO CARLOS VILLAR QUIROZ<br>KATERYNE MERCEDES CLAUDET ANGULO<br>ROGGER MANUEL MEJIA ZUÑIGA<br>WISTON HENRY AZAÑEDO MEDINA<br>JOSE LUIS SERRANO HERNANDEZ</td>
+                            <td>DOCENTE<br>DOCENTE<br>ALUMNO<br>DOCENTE<br>DOCENTE</td>
+                            <td>NOMBRADO<br>NOMBRADO<br>-<br>NOMBRADO<br>NOMBRADO</td>
+                            <td>A<br>CO<br>CO<br>CO<br>CO</td>
+                            <td>Dpto. de Ingenieria Civil, Arquitectura y Urbanismo<br>Escuela de Ingenieria Civil<br>Universidad<br>Dpto. de Ingenieria Civil, Arquitectura y Urbanismo<br>Dpto. de Ingenieria Civil, Arquitectura y Urbanismo</td>
+                            <td>Aplicada</td>
+                            <td>Construcción</td>
+                            <td>Evaluación y utilización de nuevas técnicas y herramientas en el diseño y construcción</td>
+                            <td>4.565,00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    var schoolLabels = [{% for school_count in school_counts %}"{{ school_count.0 }}",{% endfor %}];
+    var schoolData = [{% for school_count in school_counts %}{{ school_count.1 }},{% endfor %}];
+    var schoolColors = generateRandomColors(schoolData.length);
+
+    new Chart(document.getElementById("school-chart"), {
+        type: 'pie',
+        data: {
+            labels: schoolLabels,
+            datasets: [{
+                data: schoolData,
+                backgroundColor: schoolColors,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+        },
+    });
+
+    var typeLabels = [{% for type_count in type_counts %}"{{ type_count.0 }}",{% endfor %}];
+    var typeData = [{% for type_count in type_counts %}{{ type_count.1 }},{% endfor %}];
+    var typeColors = generateRandomColors(typeData.length);
+
+    new Chart(document.getElementById("type-chart"), {
+        type: 'doughnut',
+        data: {
+            labels: typeLabels,
+            datasets: [{
+                data: typeData,
+                backgroundColor: typeColors,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+        },
+    });
+
+    var conditionLabels = [{% for condition_count in condition_counts %}"{{ condition_count.0 }}",{% endfor %}];
+    var conditionData = [{% for condition_count in condition_counts %}{{ condition_count.1 }},{% endfor %}];
+    var conditionColors = generateRandomColors(conditionData.length);
+
+    new Chart(document.getElementById("condition-chart"), {
+        type: 'bar',
+        data: {
+            labels: conditionLabels,
+            datasets: [{
+                label: "Docentes",
+                data: conditionData,
+                backgroundColor: conditionColors,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                }
+            }
+        },
+    });
+
+    // Generate random colors array
+    function generateRandomColors(num) {
+        var randomColors = [];
+        for (var i = 0; i < num; i++) {
+            var color = '#' + Math.floor(Math.random() * 16777215).toString(16);
+            randomColors.push(color);
+        }
+        return randomColors;
+    }
+</script>
+{% endblock %}

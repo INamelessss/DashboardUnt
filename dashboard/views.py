@@ -1,10 +1,11 @@
 from django.shortcuts import render
-from .models import Course, CourseModel, Teacher
+from .models import Course, CourseModel, Teacher, Research
 from django.db import models
 from django.db.models import Count, Avg
 from django.db.models import Sum
 from datetime import date, datetime
 from django.db.models.functions import ExtractYear
+from random import randint
 
 def course_list(request):
     # Get query parameters from request URL
@@ -126,20 +127,69 @@ def schedule_view(request):
         schools = CourseModel.objects.values_list('headquarters', flat=True).distinct()
         cycles = CourseModel.objects.values_list('cycle', flat=True).distinct()
         careers = CourseModel.objects.values_list('career', flat=True).distinct()
+
+        courses = courses.prefetch_related('courseschedule_set')
+
+        for course in courses:
+            course.color = f'#{randint(0, 255):02X}{randint(0, 255):02X}{randint(0, 255):02X}'
+
     else:
         schools = CourseModel.objects.values_list('headquarters', flat=True).distinct()
         cycles = CourseModel.objects.values_list('cycle', flat=True).distinct()
         careers = CourseModel.objects.values_list('career', flat=True).distinct()
 
-        courses = CourseModel.objects.all()
+        courses = []
 
     # Generate hours range
+    days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     hours_range = []
     start_hour = 7
     end_hour = 22
     for hour in range(start_hour, end_hour + 1):
         hours_range.append('{:02d}:00'.format(hour))
 
-    courses = courses.prefetch_related('courseschedule_set')
+    return render(request, 'schedule.html', {'courses': courses, 'schools': schools, 'cycles': cycles, 'hours_range': hours_range, 'careers':careers, 'days_of_week':days_of_week})
 
-    return render(request, 'schedule.html', {'courses': courses, 'schools': schools, 'cycles': cycles, 'hours_range': hours_range, 'careers':careers})
+def research_analysis(request):
+    # Teachers with research
+    teachers_with_research = Teacher.objects.filter(research__isnull=False)
+
+    # Teacher participation per school
+    schools = teachers_with_research.values('school').distinct()
+    school_counts = []
+    for school in schools:
+        count = teachers_with_research.filter(school=school['school']).count()
+        school_counts.append((school['school'], count))
+
+    # Amount of investigations divided by type of investigation
+    research_types = Research.objects.values('type_of_research').distinct()
+    type_counts = []
+    for research_type in research_types:
+        count = Research.objects.filter(type_of_research=research_type['type_of_research']).count()
+        type_counts.append((research_type['type_of_research'], count))
+
+    # Condition of the professors who participated in the research
+    conditions = teachers_with_research.values('status').distinct()
+    condition_counts = []
+    for condition in conditions:
+        count = teachers_with_research.filter(status=condition['status']).count()
+        condition_counts.append((condition['status'], count))
+
+    # Total budget of all the research
+    total_budget = Research.objects.aggregate(total_budget=models.Sum('budget'))
+
+    # Total number of research projects
+    total_projects = Research.objects.count()
+
+    # CODE TITLE PROJECT SURNAMES AND FIRST NAMES TYPE RESEARCHER CONDITION ROLE DEP. ACADEMIC TYPE OF RESEARCH RESEARCH LINE SUB-LINE BUDGET
+    research_list = Research.objects.all()
+
+    context = {
+        'school_counts': school_counts,
+        'type_counts': type_counts,
+        'condition_counts': condition_counts,
+        'total_budget': total_budget['total_budget'],
+        'total_projects': total_projects,
+        'research_list': research_list,
+    }
+    return render(request, 'research_analysis.html', context)

@@ -1,249 +1,232 @@
 {% extends 'base.html' %}
 {% block content %}
-    <div class="container">
-      <div class="row mt-5">
+<div class="container mt-5">
+  <h1>Docentes de las Escuelas de Ingeniería</h1>
+  <form method="GET" action="">
+    <div class="row mt-3">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Edad:</label>
+                <select class="form-control" name="age" id="age">
+                  <option value="">All</option>
+                  <option value="21-30 years">21-30 años</option>
+                  <option value="31-40 years">31-40 años</option>
+                  <option value="41-50 years">41-50 años</option>
+                  <option value="51-60 years">51-60 años</option>
+                  <option value="61+ years">61+ años</option>
+              </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Modalidad:</label>
+                <input type="text" name="modality" class="form-control" value="{{ request.GET.modality }}">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>Categoria:</label>
+                <input type="text" name="category" class="form-control" value="{{ request.GET.category }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>Grado:</label>
+                <select class="form-control" name="grade" id="grade">
+                    <option value="">Todos</option>
+                    <option value="MAGISTER">Magister</option>
+                    <option value="DOCTOR">Doctor</option>
+                    <option value="-">No registra</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <label>Escuela:</label>
+                <input type="text" name="school" class="form-control" value="{{ request.GET.school }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3" style="padding-bottom: 1.5%">
         <div class="col-md-12">
-            <h1>Docentes de las Escuelas de Ingeniería</h1>
-            <form method="GET" action="">
-
-              <div class="row mt-3">
-                  <div class="col-md-4">
-                      <div class="form-group">
-                          <label>Edad:</label>
-                          <select class="form-control" name="age" id="age">
-                            <option value="">All</option>
-                            <option value="21-30 years">21-30 years</option>
-                            <option value="31-40 years">31-40 years</option>
-                            <option value="41-50 years">41-50 years</option>
-                            <option value="51-60 years">51-60 years</option>
-                            <option value="61+ years">61+ years</option>
-                        </select>
-                      </div>
-                  </div>
-                  <div class="col-md-4">
-                      <div class="form-group">
-                          <label>Modalidad:</label>
-                          <input type="text" name="modality" class="form-control" value="{{ request.GET.modality }}">
-                      </div>
-                  </div>
-                  <div class="col-md-4">
-                      <div class="form-group">
-                          <label>Categoria:</label>
-                          <input type="text" name="category" class="form-control" value="{{ request.GET.category }}">
-                      </div>
-                  </div>
-              </div>
-
-              <div class="row">
-                  <div class="col-md-6">
-                      <div class="form-group">
-                          <label>Grado:</label>
-                          <select class="form-control" name="grade" id="grade">
-                              <option value="">Todos</option>
-                              <option value="MAGISTER">Magister</option>
-                              <option value="DOCTOR">Doctor</option>
-                              <option value="-">No registra</option>
-                          </select>
-                      </div>
-                  </div>
-                  <div class="col-md-6">
-                      <div class="form-group">
-                          <label>Escuela:</label>
-                          <input type="text" name="school" class="form-control" value="{{ request.GET.school }}">
-                      </div>
-                  </div>
-              </div>
-
-              <div class="row mt-3" style="padding-bottom: 1.5%">
-                  <div class="col-md-12">
-                      <button type="submit" class="btn btn-primary">Aplicar filtros</button>
-                  </div>
-              </div>
-          </form>
+            <button type="submit" class="btn btn-primary">Aplicar filtros</button>
         </div>
     </div>
-        <div class="row">
-          <div class="col-md-6">
-            <h3>Distribucion por condición</h3>
-            <canvas id="degreeChart"></canvas>
-          </div>
-          <div class="col-md-6">
-            <h3>Distribución por contrato</h3>
-            <canvas id="contractChart"></canvas>
-          </div>
-        </div>
+  </form>
+</div>
 
-        <div class="row mt-5">
-          <div class="col-md-12">
-            <h3>Docentes por escuela</h3>
-            <canvas id="teachersPerSchoolChart"></canvas>
+<div class="container mt-4">
+  <div class="row">
+      <div class="col-md-6">
+          <h3 class="mb-3">Distribución por condición</h3>
+          <div class="card">
+              <div class="card-body">
+                  <canvas id="degreeChart" width="200" height="200"></canvas>
+              </div>
           </div>
-        </div>
-
-        <div class="row mt-5">
-          <div class="col-md-12">
-            <h3>Edad promedio de los profesores</h3>
-            <p>{{ average_age }}</p>
-          </div>
-        </div>
       </div>
-    <div class="container">
-        <div class="row">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>Escuela</th>
-                    <th>Apellidos y nombres</th>
-                    <th>Condición</th>
-                    <th>Modalidad</th>
-                    <th>Categoria</th>
-                    <th>Grado</th>
-                    <th>Edad</th>
-                    <th>Años de trabajo</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for teacher in teachers %}
-                <tr>
-                    <td>{{ teacher.school }}</td>
-                    <td>{{ teacher.surname_and_names }}</td>
-                    <td>{{ teacher.status }}</td>
-                    <td>{{ teacher.type }}</td>
-                    <td>{{ teacher.category }}</td>
-                    <td>{{ teacher.grade }}</td>
-                    <td>{{ teacher.age }}</td>
-                    <td>{{ teacher.work }}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-      <script>
+      <div class="col-md-6">
+          <h3 class="mb-3">Distribución por contrato</h3>
+          <div class="card">
+              <div class="card-body">
+                  <canvas id="contractChart" width="200" height="200"></canvas>
+              </div>
+          </div>
+      </div>
+  </div>
 
-        var degreeData = [
-        {% for degree in degree_data %}
+  <div class="row mt-5">
+      <div class="col-md-12">
+          <h3 class="mb-3">Docentes por escuela</h3>
+          <div class="card">
+              <div class="card-body">
+                  <canvas id="teachersPerSchoolChart" width="400" height="200"></canvas>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <div class="row mt-5">
+      <div class="col-md-12">
+          <h3 class="mb-3">Edad promedio de los profesores</h3>
+          <p class="lead">{{ average_age }}</p>
+      </div>
+  </div>
+</div>
+
+<div class="container mt-5">
+  <div class="row">
+      <table class="table">
+          <thead>
+              <tr>
+                  <th>Escuela</th>
+                  <th>Apellidos y nombres</th>
+                  <th>Condición</th>
+                  <th>Modalidad</th>
+                  <th>Categoria</th>
+                  <th>Grado</th>
+                  <th>Edad</th>
+                  <th>Años de trabajo</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% for teacher in teachers %}
+              <tr>
+                  <td>{{ teacher.school }}</td>
+                  <td>{{ teacher.surname_and_names }}</td>
+                  <td>{{ teacher.status }}</td>
+                  <td>{{ teacher.type }}</td>
+                  <td>{{ teacher.category }}</td>
+                  <td>{{ teacher.grade }}</td>
+                  <td>{{ teacher.age }}</td>
+                  <td>{{ teacher.work }}</td>
+              </tr>
+              {% endfor %}
+          </tbody>
+      </table>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+
+      var degreeData = [
+          {% for degree in degree_data %}
           {
-            label: "{{ degree.label }}",
-            data: {{ degree.data }},
-            backgroundColor: getRandomColor(),
-            borderColor: getRandomColor(),
-            borderWidth: 1
+              label: "{{ degree.label }}",
+              data: {{ degree.data }},
+              backgroundColor: getRandomColor(),
+              borderColor: getRandomColor(),
+              borderWidth: 1
           },
-        {% endfor %}
+          {% endfor %}
       ];
 
-        // Create a pie chart for degree distribution
-        var degreeChart = new Chart(document.getElementById('degreeChart'), {
+      var contractData = [
+          {% for contract in contract_data %}
+          {
+              label: "{{ contract.label }}",
+              data: {{ contract.data }},
+              backgroundColor: getRandomColor(),
+              borderColor: getRandomColor(),
+              borderWidth: 1
+          },
+          {% endfor %}
+      ];
+
+      var teachersPerSchoolData = [
+          {% for teachers_per_school in teachers_per_school_data %}
+          {
+              label: "{{ teachers_per_school.label }}",
+              data: [{{ teachers_per_school.data | safe }}],
+              backgroundColor: getRandomColor(),
+              borderColor: getRandomColor(),
+              borderWidth: 1
+          },
+          {% endfor %}
+      ];
+
+      var degreeChart = new Chart(document.getElementById('degreeChart'), {
           type: 'pie',
           data: {
-            datasets: [{
-              data: degreeData.map(degree => degree.data),
-              backgroundColor: degreeData.map(degree => degree.backgroundColor),
-              borderColor: degreeData.map(degree => degree.borderColor)
-            }],
-            labels: degreeData.map(degree => degree.label),
+              datasets: [{
+                  data: degreeData.map(degree => degree.data),
+                  backgroundColor: degreeData.map(degree => degree.backgroundColor),
+                  borderColor: degreeData.map(degree => degree.borderColor)
+              }],
+              labels: degreeData.map(degree => degree.label),
           },
-        });
-
-        // Get the data for contract distribution
-        var contractData = [
-        {% for contract in contract_data %}
-          {
-            label: "{{ contract.label }}",
-            data: {{ contract.data }},
-            backgroundColor: getRandomColor(),
-            borderColor: getRandomColor(),
-            borderWidth: 1
-          },
-        {% endfor %}
-      ];
-
-        // Create a pie chart for contract distribution
-        var contractChart = new Chart(document.getElementById('contractChart'), {
-          type: 'pie',
-          data: {
-            datasets: [{
-              data: contractData.map(contract => contract.data),
-              backgroundColor: contractData.map(contract => contract.backgroundColor),
-              borderColor: contractData.map(contract => contract.borderColor)
-            }],
-            labels: contractData.map(contract => contract.label),
-          },
-        });
-
-        // Get the data for teachers per school
-        var teachersPerSchoolData = [
-        {% for teachers_per_school in teachers_per_school_data %}
-          {
-            label: "{{ teachers_per_school.label }}",
-            data: [{{ teachers_per_school.data | safe }}],
-            backgroundColor: getRandomColor(),
-            borderColor: getRandomColor(),
-            borderWidth: 1
-          },
-        {% endfor %}
-      ];
-
-      // Create a custom plugin
-      Chart.plugins.register({
-        afterDraw: function(chart) {
-          var ctx = chart.chart.ctx;
-          ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontSize, Chart.defaults.global.defaultFontStyle, Chart.defaults.global.defaultFontFamily);
-          ctx.fillStyle = Chart.defaults.global.defaultFontColor;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
-
-          chart.data.datasets.forEach(function(dataset, datasetIndex) {
-            for (var i = 0; i < dataset.data.length; i++) {
-              var model = dataset._meta[Object.keys(dataset._meta)[0]].data[i]._model;
-              var label = dataset.data[i].toString();
-
-              // Adjust the y position and offset based on your preferences
-              ctx.fillText(label, model.x, model.y - 5); // Offset the label a bit
-            }
-          });
-        }
       });
 
-      // Create a bar chart for teachers per school
+      var contractChart = new Chart(document.getElementById('contractChart'), {
+          type: 'pie',
+          data: {
+              datasets: [{
+                  data: contractData.map(contract => contract.data),
+                  backgroundColor: contractData.map(contract => contract.backgroundColor),
+                  borderColor: contractData.map(contract => contract.borderColor)
+              }],
+              labels: contractData.map(contract => contract.label),
+          },
+      });
+
       var teachersPerSchoolChart = new Chart(document.getElementById('teachersPerSchoolChart'), {
-        type: 'bar',
-        data: {
-          datasets: [{
-            label: 'Profesores por Escuela',
-            data: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.data),
-            backgroundColor: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.backgroundColor),
-            borderColor: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.borderColor),
-            borderWidth: 1, // Agrega esta línea para establecer el ancho de la línea de borde en 1
-            fill: false, // Agrega esta línea para evitar rellenar el área sobre la línea
-          }],
-          labels: [
-            {% for teachers_per_school in teachers_per_school_data %}
-              "{{ teachers_per_school.label }}",
-            {% endfor %}
-          ],
-        },
-        options: {
-          scales: {
-            yAxes: [{
-              ticks: {
-                beginAtZero: true,
-                stepSize: 1
+          type: 'bar',
+          data: {
+              datasets: [{
+                  label: 'Profesores por Escuela',
+                  data: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.data),
+                  backgroundColor: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.backgroundColor),
+                  borderColor: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.borderColor),
+                  borderWidth: 1,
+                  fill: false,
+              }],
+              labels: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.label),
+          },
+          options: {
+              scales: {
+                  yAxes: [{
+                      ticks: {
+                          beginAtZero: true,
+                          stepSize: 1
+                      }
+                  }]
               }
-            }]
           }
-        }
       });
 
-        // Function to generate random colors for the charts
-        function getRandomColor() {
+      function getRandomColor() {
           var letters = '0123456789ABCDEF';
           var color = '#';
           for (var i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
+              color += letters[Math.floor(Math.random() * 16)];
           }
           return color;
-        }
-      </script>
+      }
+
+  });
+</script>
 {% endblock %}
