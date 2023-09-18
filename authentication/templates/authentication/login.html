@@ -1,0 +1,43 @@
+{% extends "auth-base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Login</h2>
+    <form id="login-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" class="form-control" id="username" name="username">
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" class="form-control" id="password" name="password">
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $("#login-form").submit(function(e) {
+            e.preventDefault();
+            $.ajax({
+                type: "POST",
+                url: "{% url 'login' %}",  // Replace with your login view name
+                data: $(this).serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        window.location.href = "{% url 'dashboard' %}";  // Redirect to dashboard upon successful login
+                    } else {
+                        alert("Login failed. Please check your credentials.");
+                    }
+                },
+                error: function() {
+                    alert("An error occurred during login.");
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

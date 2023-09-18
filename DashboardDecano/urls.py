@@ -16,8 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from dashboard import views
+from authentication import views as auth_views
 
 urlpatterns = [
+    path('login/', auth_views.login_view, name='login'),
     path('course_list/', views.course_list, name='course_list'),
     path("__debug__/", include("debug_toolbar.urls")),
     path('dashboard/', views.dashboard, name='dashboard'),
