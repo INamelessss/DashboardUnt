@@ -4,6 +4,8 @@ from django.db import models
 from django.db.models import Count, Avg
 from django.db.models import Sum
 from datetime import date, datetime
+from django.db.models import F, Q
+from django.db.models import Count, Case, When, Value, IntegerField
 from django.db.models.functions import ExtractYear
 from random import randint
 
@@ -82,6 +84,7 @@ def dashboard(request):
             end_birth_year = current_year - int(start_age)
 
             teachers = teachers.filter(birth__year__range=(start_birth_year, end_birth_year))
+
     if modality:
         teachers = teachers.filter(type=modality)
     if category:
@@ -101,17 +104,42 @@ def dashboard(request):
 
     # Calculate the number of teachers per school
     teachers_per_school_data = teachers.values('school').annotate(count=Count('school')).order_by('-count')
-    teachers_per_school = [{'label': data['school'], 'data': data['count']} for data in teachers_per_school_data]
 
     # Calculate the average age of teachers
     average_age = teachers.aggregate(avg_age=Avg('age'))['avg_age']
+
+    # Filtra los profesores cuya edad es mayor o igual a 70
+    teachers_70_or_older = teachers.filter(age__gte=70)
+
+    # Obtiene la cantidad de profesores cuya edad es mayor o igual a 70
+    count_teachers_70_or_older = teachers_70_or_older.count()
+
+
+    teachers_with_research = Teacher.objects.filter(research__isnull=False).values('school').annotate(count=Count('school'))
+    teachers_without_research = Teacher.objects.filter(research__isnull=True).values('school').annotate(count=Count('school'))
+
+    teachers_per_school_data = []
+    for with_research in teachers_with_research:
+        school = with_research['school']
+        with_count = with_research['count']
+        without_count = next((item['count'] for item in teachers_without_research if item['school'] == school), 0)
+        teachers_per_school_data.append({
+            'school': school,
+            'with_research': with_count,
+            'without_research': without_count,
+        })
+
+    # Calcular el porcentaje
+    percentage_teachers_with_research = (Teacher.objects.filter(research__isnull=False).distinct().count() / Teacher.objects.count()) * 100
 
     context = {
         'teachers': teachers,
         'degree_data': degree_distribution,
         'contract_data': contract_distribution,
-        'teachers_per_school_data': teachers_per_school,
+        'teachers_per_school_data': teachers_per_school_data,
         'average_age': average_age,
+        'count_teachers_70_or_older': count_teachers_70_or_older,
+        'percentage_teachers_with_research': percentage_teachers_with_research,
     }
 
     return render(request, 'dashboard.html', context)
@@ -181,8 +209,7 @@ def research_analysis(request):
     # Total number of research projects
     total_projects = Research.objects.count()
 
-    # CODE TITLE PROJECT SURNAMES AND FIRST NAMES TYPE RESEARCHER CONDITION ROLE DEP. ACADEMIC TYPE OF RESEARCH RESEARCH LINE SUB-LINE BUDGET
-    research_list = Research.objects.all()
+    researchs = Research.objects.all()
 
     context = {
         'school_counts': school_counts,
@@ -190,6 +217,6 @@ def research_analysis(request):
         'condition_counts': condition_counts,
         'total_budget': total_budget['total_budget'],
         'total_projects': total_projects,
-        'research_list': research_list,
+        'researchs': researchs,
     }
     return render(request, 'research_analysis.html', context)

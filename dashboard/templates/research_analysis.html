@@ -55,19 +55,45 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>473232201121</td>
-                            <td>ANÁLISIS COMPARATIVO DE LOS TIEMPOS Y COSTOS EN LA GESTIÓN DE EDIFICIOS MULTIFAMILIARES MEDIANTE BUILDING INFORMATION MODELING (BIM) Y LA METODOLOGÍA TRADICIONAL, TRUJILLO, 2022.</td>
-                            <td>JOSUALDO CARLOS VILLAR QUIROZ<br>KATERYNE MERCEDES CLAUDET ANGULO<br>ROGGER MANUEL MEJIA ZUÑIGA<br>WISTON HENRY AZAÑEDO MEDINA<br>JOSE LUIS SERRANO HERNANDEZ</td>
-                            <td>DOCENTE<br>DOCENTE<br>ALUMNO<br>DOCENTE<br>DOCENTE</td>
-                            <td>NOMBRADO<br>NOMBRADO<br>-<br>NOMBRADO<br>NOMBRADO</td>
-                            <td>A<br>CO<br>CO<br>CO<br>CO</td>
-                            <td>Dpto. de Ingenieria Civil, Arquitectura y Urbanismo<br>Escuela de Ingenieria Civil<br>Universidad<br>Dpto. de Ingenieria Civil, Arquitectura y Urbanismo<br>Dpto. de Ingenieria Civil, Arquitectura y Urbanismo</td>
-                            <td>Aplicada</td>
-                            <td>Construcción</td>
-                            <td>Evaluación y utilización de nuevas técnicas y herramientas en el diseño y construcción</td>
-                            <td>4.565,00</td>
-                        </tr>
+                        {% for research in researchs %}
+                            <tr>
+                                <td>{{ research.code }}</td>
+                                <td>{{ research.title }}</td>
+                                <td>
+                                    {% for teacher in research.teacher.all %}
+                                        - {{ teacher.surname_and_names }} <br>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% for teacher in research.teacher.all %}
+                                        - {{ teacher.type }} <br>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% for teacher in research.teacher.all %}
+                                       - {{ teacher.status }} <br>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% for teacher in research.teacher.all %}
+                                        {% if teacher == research.teacher.first %}
+                                            A <br>
+                                        {% else %}
+                                            CO <br>
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% for teacher in research.teacher.all %}
+                                       - {{ teacher.school }} <br>
+                                    {% endfor %}
+                                </td>
+                                <td>{{ research.type_of_research }}</td>
+                                <td>{{ research.research_line }}</td>
+                                <td>{{ research.sub_line }}</td>
+                                <td>{{ research.budget }}</td>
+                            </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

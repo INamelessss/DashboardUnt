@@ -82,7 +82,7 @@ class CourseSchedule(models.Model):
         return f"{self.course} - {self.day}: {self.start_time} - {self.end_time}"
 
 class Research(models.Model):
-    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    teacher = models.ManyToManyField(Teacher)
     code = models.CharField(max_length=20)
     title = models.CharField(max_length=100)
     type_of_research = models.CharField(max_length=100)

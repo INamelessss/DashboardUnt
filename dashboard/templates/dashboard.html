@@ -91,11 +91,18 @@
   </div>
 
   <div class="row mt-5">
-      <div class="col-md-12">
-          <h3 class="mb-3">Edad promedio de los profesores</h3>
-          <p class="lead">{{ average_age }}</p>
-      </div>
-  </div>
+    <div class="col-md-4">
+        <h3 class="mb-3">Edad promedio de los profesores</h3>
+        <p class="lead">{{ average_age|floatformat:0 }}</p>
+    </div>
+    <div class="col-md-4">
+        <h3 class="mb-3">Cantidad de profesores mayores de 70 años</h3>
+        <p class="lead">{{ count_teachers_70_or_older }}</p>
+    </div>
+    <div class="col-md-4">
+        <h3 class="mb-3">Procentaje de profesores haciendo investigación</h3>
+        <p class="lead">{{ percentage_teachers_with_research|floatformat:2 }}%</p>
+    </div>
 </div>
 
 <div class="container mt-5">
@@ -157,18 +164,6 @@
           {% endfor %}
       ];
 
-      var teachersPerSchoolData = [
-          {% for teachers_per_school in teachers_per_school_data %}
-          {
-              label: "{{ teachers_per_school.label }}",
-              data: [{{ teachers_per_school.data | safe }}],
-              backgroundColor: getRandomColor(),
-              borderColor: getRandomColor(),
-              borderWidth: 1
-          },
-          {% endfor %}
-      ];
-
       var degreeChart = new Chart(document.getElementById('degreeChart'), {
           type: 'pie',
           data: {
@@ -193,31 +188,85 @@
           },
       });
 
-      var teachersPerSchoolChart = new Chart(document.getElementById('teachersPerSchoolChart'), {
-          type: 'bar',
-          data: {
-              datasets: [{
-                  label: 'Profesores por Escuela',
-                  data: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.data),
-                  backgroundColor: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.backgroundColor),
-                  borderColor: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.borderColor),
-                  borderWidth: 1,
-                  fill: false,
-              }],
-              labels: teachersPerSchoolData.map(teachersPerSchoolData => teachersPerSchoolData.label),
-          },
-          options: {
-              scales: {
-                  yAxes: [{
-                      ticks: {
-                          beginAtZero: true,
-                          stepSize: 1
-                      }
-                  }]
-              }
-          }
-      });
 
+      var teachersPerSchoolData = [
+    {% for data in teachers_per_school_data %}
+        {
+            label: "{{ data.school }} (Con Investigaciones)",
+            data: [{{ data.with_research }}],
+            backgroundColor: getRandomColor(),
+            borderColor: getRandomColor(),
+            borderWidth: 1
+        },
+        {
+            label: "{{ data.school }} (Sin Investigaciones)",
+            data: [{{ data.without_research }}],
+            backgroundColor: getRandomColor(),
+            borderColor: getRandomColor(),
+            borderWidth: 1
+        },
+        {% endfor %}
+    ];
+
+    const data = {
+        labels: [
+          {% for data in teachers_per_school_data %}
+            "{{ data.school }}",
+          {% endfor %}
+        ],
+        datasets: [
+          {
+            label: 'Con Investigaciones',
+            data: [
+              {% for data in teachers_per_school_data %}
+                {{ data.with_research }},
+              {% endfor %}
+            ],
+            backgroundColor: getRandomColor(),
+            borderColor: getRandomColor(),
+            borderWidth: 1,
+            stack: 'stack1'
+          },
+          {
+            label: 'Sin Investigaciones',
+            data: [
+              {% for data in teachers_per_school_data %}
+                {{ data.without_research }},
+              {% endfor %}
+            ],
+            backgroundColor: getRandomColor(),
+            borderColor: getRandomColor(),
+            borderWidth: 1,
+            stack: 'stack1'
+          },
+        ]
+      };
+
+      const config = {
+        type: 'bar',
+        data: data,
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: 'Profesores por Escuela con/sin Investigación'
+            },
+          },
+          responsive: true,
+          scales: {
+            x: {
+              stacked: true,
+            },
+            y: {
+              stacked: true
+            }
+          }
+        }
+      };
+
+      var teachersPerSchoolChart = new Chart(document.getElementById('teachersPerSchoolChart'), config);
+
+console.log(teachersPerSchoolData);
       function getRandomColor() {
           var letters = '0123456789ABCDEF';
           var color = '#';
