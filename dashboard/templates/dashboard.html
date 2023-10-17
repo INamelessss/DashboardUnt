@@ -2,13 +2,31 @@
 {% block content %}
 <div class="container mt-5">
   <h1>Docentes de las Escuelas de Ingeniería</h1>
+    <div class="row mt-5">
+        <div class="col-md-3">
+            <h3 class="mb-3">Edad promedio de los profesores</h3>
+            <p class="lead">{{ average_age|floatformat:0 }}</p>
+        </div>
+        <div class="col-md-3">
+            <h3 class="mb-3">Cantidad de profesores mayores de 70 años</h3>
+            <p class="lead">{{ count_teachers_70_or_older }}</p>
+        </div>
+        <div class="col-md-3">
+            <h3 class="mb-3">Porcentaje de profesores haciendo investigación</h3>
+            <p class="lead">{{ percentage_teachers_with_research|floatformat:2 }}%</p>
+        </div>
+        <div class="col-md-3">
+            <h3 class="mb-3" style="color: red;">Profesores sin grado mínimo requerido</h3>
+            <p class="lead" style="color: red;">1</p>
+        </div>
+    </div>
   <form method="GET" action="">
     <div class="row mt-3">
         <div class="col-md-4">
             <div class="form-group">
                 <label>Edad:</label>
                 <select class="form-control" name="age" id="age">
-                  <option value="">All</option>
+                  <option value="">Todas</option>
                   <option value="21-30 years">21-30 años</option>
                   <option value="31-40 years">31-40 años</option>
                   <option value="41-50 years">41-50 años</option>
@@ -20,7 +38,12 @@
         <div class="col-md-4">
             <div class="form-group">
                 <label>Modalidad:</label>
-                <input type="text" name="modality" class="form-control" value="{{ request.GET.modality }}">
+                <select class="form-control" name="modality" id="modality">
+                    <option value="">Todas</option>
+                    <option value="TP">Tiempo Parcial</option>
+                    <option value="TC">Tiempo Completo</option>
+                    <option value="DE">Dedicación Exclusiva</option>
+                </select>
             </div>
         </div>
         <div class="col-md-4">
@@ -65,7 +88,7 @@
           <h3 class="mb-3">Distribución por condición</h3>
           <div class="card">
               <div class="card-body">
-                  <canvas id="degreeChart" width="200" height="200"></canvas>
+                  <canvas id="degreeChart" width="100" height="50"></canvas>
               </div>
           </div>
       </div>
@@ -73,7 +96,7 @@
           <h3 class="mb-3">Distribución por contrato</h3>
           <div class="card">
               <div class="card-body">
-                  <canvas id="contractChart" width="200" height="200"></canvas>
+                  <canvas id="contractChart" width="100" height="50"></canvas>
               </div>
           </div>
       </div>
@@ -84,25 +107,12 @@
           <h3 class="mb-3">Docentes por escuela</h3>
           <div class="card">
               <div class="card-body">
-                  <canvas id="teachersPerSchoolChart" width="400" height="200"></canvas>
+                  <canvas id="teachersPerSchoolChart" width="200" height="70"></canvas>
               </div>
           </div>
       </div>
   </div>
 
-  <div class="row mt-5">
-    <div class="col-md-4">
-        <h3 class="mb-3">Edad promedio de los profesores</h3>
-        <p class="lead">{{ average_age|floatformat:0 }}</p>
-    </div>
-    <div class="col-md-4">
-        <h3 class="mb-3">Cantidad de profesores mayores de 70 años</h3>
-        <p class="lead">{{ count_teachers_70_or_older }}</p>
-    </div>
-    <div class="col-md-4">
-        <h3 class="mb-3">Procentaje de profesores haciendo investigación</h3>
-        <p class="lead">{{ percentage_teachers_with_research|floatformat:2 }}%</p>
-    </div>
 </div>
 
 <div class="container mt-5">
