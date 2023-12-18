@@ -4,19 +4,19 @@
   <h1>Docentes de las Escuelas de Ingeniería</h1>
     <div class="row mt-5">
         <div class="col-md-3">
-            <h3 class="mb-3">Edad promedio de los profesores</h3>
+            <h3 class="mb-3">Edad promedio de los docentes</h3>
             <p class="lead">{{ average_age|floatformat:0 }}</p>
         </div>
         <div class="col-md-3">
-            <h3 class="mb-3">Cantidad de profesores mayores de 70 años</h3>
+            <h3 class="mb-3">Cantidad de docentes mayores de 70 años</h3>
             <p class="lead">{{ count_teachers_70_or_older }}</p>
         </div>
         <div class="col-md-3">
-            <h3 class="mb-3">Porcentaje de profesores haciendo investigación</h3>
+            <h3 class="mb-3">Porcentaje de docentes haciendo investigación</h3>
             <p class="lead">{{ percentage_teachers_with_research|floatformat:2 }}%</p>
         </div>
         <div class="col-md-3">
-            <h3 class="mb-3" style="color: red;">Profesores sin grado mínimo requerido</h3>
+            <h3 class="mb-3" style="color: red;">Docentes sin grado mínimo requerido</h3>
             <p class="lead" style="color: red;">1</p>
         </div>
     </div>
@@ -48,7 +48,7 @@
         </div>
         <div class="col-md-4">
             <div class="form-group">
-                <label>Categoria:</label>
+                <label>Categoría:</label>
                 <input type="text" name="category" class="form-control" value="{{ request.GET.category }}">
             </div>
         </div>
@@ -117,30 +117,30 @@
 
 <div class="container mt-5">
   <div class="row">
-      <table class="table">
-          <thead>
+      <table id="teacherTable" class="display" style="width:100%">
+          <thead class="bg-primary text-white">
               <tr>
                   <th>Escuela</th>
                   <th>Apellidos y nombres</th>
                   <th>Condición</th>
                   <th>Modalidad</th>
-                  <th>Categoria</th>
+                  <th>Categoría</th>
                   <th>Grado</th>
                   <th>Edad</th>
-                  <th>Años de trabajo</th>
+                  <th style="text-align: center">Años de trabajo</th>
               </tr>
           </thead>
           <tbody>
               {% for teacher in teachers %}
               <tr>
-                  <td>{{ teacher.school }}</td>
+                  <td style="text-align: center">{{ teacher.school }}</td>
                   <td>{{ teacher.surname_and_names }}</td>
-                  <td>{{ teacher.status }}</td>
-                  <td>{{ teacher.type }}</td>
-                  <td>{{ teacher.category }}</td>
-                  <td>{{ teacher.grade }}</td>
-                  <td>{{ teacher.age }}</td>
-                  <td>{{ teacher.work }}</td>
+                  <td style="text-align: center">{{ teacher.status }}</td>
+                  <td style="text-align: center">{{ teacher.type }}</td>
+                  <td style="text-align: center">{{ teacher.category }}</td>
+                  <td style="text-align: center">{{ teacher.grade }}</td>
+                  <td style="text-align: center">{{ teacher.age }}</td>
+                  <td style="text-align: center">{{ teacher.work }}</td>
               </tr>
               {% endfor %}
           </tbody>
@@ -148,6 +148,11 @@
   </div>
 </div>
 <script>
+  new DataTable('#teacherTable', {
+    language: {
+        url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+    }
+  });
   document.addEventListener('DOMContentLoaded', function () {
 
       var degreeData = [
