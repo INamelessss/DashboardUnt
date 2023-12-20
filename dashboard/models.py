@@ -89,3 +89,11 @@ class Research(models.Model):
     research_line = models.CharField(max_length=100)
     sub_line = models.CharField(max_length=100)
     budget = models.DecimalField(max_digits=10, decimal_places=2)
+
+class Estudiante(models.Model):
+    numero_matricula = models.CharField(max_length=10, unique=True)
+    dni = models.CharField(max_length=8, unique=True)
+    apellidos_nombres = models.CharField(max_length=200)
+    ponderado = models.DecimalField(max_digits=5, decimal_places=2)
+    escuela = models.CharField(max_length=100)
+    sede = models.CharField(max_length=100)

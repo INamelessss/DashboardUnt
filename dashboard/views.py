@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from .models import Course, CourseModel, Teacher, Research
+from .models import Course, CourseModel, Teacher, Research, Estudiante
 from django.db import models
-from django.db.models import Count, Avg
+from django.db.models import Count, Avg, Min, Max
 from django.db.models import Sum
 from datetime import date, datetime
 from django.db.models import F, Q
@@ -220,3 +220,48 @@ def research_analysis(request):
         'researchs': researchs,
     }
     return render(request, 'research_analysis.html', context)
+
+def estudiantes(request):
+    # Obtenemos los parámetros de los filtros de la solicitud GET
+    filtro_carrera = request.GET.get('escuela')
+    filtro_sede = request.GET.get('sede')
+
+    # Filtramos los estudiantes según la carrera y la sede seleccionadas, si se han proporcionado
+    estudiantes_filtrados = Estudiante.objects.all()
+    if filtro_carrera:
+        estudiantes_filtrados = estudiantes_filtrados.filter(escuela=filtro_carrera)
+    if filtro_sede:
+        estudiantes_filtrados = estudiantes_filtrados.filter(sede=filtro_sede)
+
+    # Estadísticas que no dependen de los filtros
+    carrera_con_mas_reprobados = Estudiante.objects.filter(ponderado__lt=13.5).values('escuela').annotate(reprobados_count=Count('id')).order_by('-reprobados_count').first()
+    carrera_con_mas_alumnos = Estudiante.objects.values('escuela').annotate(alumnos_count=Count('id')).order_by('-alumnos_count').first()
+    carrera_con_menor_ponderado = Estudiante.objects.values('escuela').annotate(min_ponderado=Min('ponderado')).order_by('min_ponderado').first()
+    carrera_con_mayor_ponderado = Estudiante.objects.values('escuela').annotate(max_ponderado=Max('ponderado')).order_by('-max_ponderado').first()
+    sede_con_mayor_ponderado = Estudiante.objects.values('sede').annotate(promedio_ponderado=Avg('ponderado')).order_by('-promedio_ponderado').first()
+    sede_con_menor_ponderado = Estudiante.objects.values('sede').annotate(promedio_ponderado=Avg('ponderado')).order_by('promedio_ponderado').first()
+
+    # Lista de carreras y sedes para los filtros
+    carreras = Estudiante.objects.values_list('escuela', flat=True).distinct()
+    sedes = Estudiante.objects.values_list('sede', flat=True).distinct()
+
+    context = {
+        'carrera_con_mas_reprobados': carrera_con_mas_reprobados['escuela'] if carrera_con_mas_reprobados else 'N/A',
+        'reprobados_count': carrera_con_mas_reprobados['reprobados_count'] if carrera_con_mas_reprobados else 0,
+        'carrera_con_mas_alumnos': carrera_con_mas_alumnos['escuela'] if carrera_con_mas_alumnos else 'N/A',
+        'alumnos_count': carrera_con_mas_alumnos['alumnos_count'] if carrera_con_mas_alumnos else 0,
+        'carrera_con_menor_ponderado': carrera_con_menor_ponderado['escuela'] if carrera_con_menor_ponderado else 'N/A',
+        'min_ponderado': carrera_con_menor_ponderado['min_ponderado'] if carrera_con_menor_ponderado else 0,
+        'carrera_con_mayor_ponderado': carrera_con_mayor_ponderado['escuela'] if carrera_con_mayor_ponderado else 'N/A',
+        'max_ponderado': carrera_con_mayor_ponderado['max_ponderado'] if carrera_con_mayor_ponderado else 0,
+        'sede_con_mayor_ponderado': sede_con_mayor_ponderado['sede'] if sede_con_mayor_ponderado else 'N/A',
+        'mayor_promedio_ponderado': sede_con_mayor_ponderado['promedio_ponderado'] if sede_con_mayor_ponderado else 0,
+        'sede_con_menor_ponderado': sede_con_menor_ponderado['sede'] if sede_con_menor_ponderado else 'N/A',
+        'menor_promedio_ponderado': sede_con_menor_ponderado['promedio_ponderado'] if sede_con_menor_ponderado else 0,
+        'estudiantes': estudiantes_filtrados,
+        'carreras': carreras,
+        'sedes': sedes,
+        'filtro_carrera': filtro_carrera,
+        'filtro_sede': filtro_sede,
+    }
+    return render(request, 'estudiantes.html', context)

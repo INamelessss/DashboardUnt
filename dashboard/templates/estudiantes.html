@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Estadísticas</h1>
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Estadísticas de Carrera</h5>
+                    <p class="card-text">Carrera con mayor cantidad de ponderados reprobatorios: {{ carrera_con_mas_reprobados }} - {{ reprobados_count }}</p>
+                    <p class="card-text">Carrera con mayor cantidad de alumnos: {{ carrera_con_mas_alumnos }} - {{ alumnos_count }}</p>
+                    <p class="card-text">Carrera con menor promedio ponderado: {{ carrera_con_menor_ponderado }} - {{ min_ponderado }}</p>
+                    <p class="card-text">Carrera con mayor promedio ponderado: {{ carrera_con_mayor_ponderado }} - {{ max_ponderado }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Estadísticas de Sede </h5>
+                    <p class="card-text">Sede con menor promedio ponderado: {{ sede_con_menor_ponderado }} - {{ menor_promedio_ponderado }}</p>
+                    <p class="card-text">Sede con mayor promedio ponderado: {{ sede_con_mayor_ponderado }} - {{ mayor_promedio_ponderado }}</p>
+                </div>
+            </div>
+    </div>
+
+    <h2 class="mt-4">Filtros</h2>
+    <div class="row">
+        <div class="col-6">
+            <form method="get" class="form-inline">
+                <label class="my-1 mr-2" for="escuela">Carrera:</label>
+                <select name="escuela" class="form-control">
+                    <option value="">Selecciona una carrera</option>
+                    {% for carrera in carreras %}
+                    <option value="{{ carrera }}" {% if carrera == filtro_carrera %}selected{% endif %}>{{ carrera }}</option>
+                    {% endfor %}
+                </select>
+                <!-- Mantener el filtro de sede si ya está seleccionado -->
+                {% if filtro_sede %}
+                <input type="hidden" name="sede" value="{{ filtro_sede }}">
+                {% endif %}
+                <button type="submit" class="btn btn-primary my-1">Filtrar</button>
+            </form>
+        </div>
+        <div class="col-6">
+            <form method="get" class="form-inline">
+                <label class="my-1 mr-2" for="sede">Sede:</label>
+                <select name="sede" class="form-control">
+                    <option value="">Selecciona una sede</option>
+                    {% for sede in sedes %}
+                    <option value="{{ sede }}" {% if sede == filtro_sede %}selected{% endif %}>{{ sede }}</option>
+                    {% endfor %}
+                </select>
+                <!-- Mantener el filtro de carrera si ya está seleccionado -->
+                {% if filtro_carrera %}
+                <input type="hidden" name="carrera" value="{{ filtro_carrera }}">
+                {% endif %}
+                <button type="submit" class="btn btn-primary my-1">Filtrar</button>
+            </form>
+        </div>
+    </div>
+
+    <h2 class="mt-4">Estudiantes</h2>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>NRO. MAT.</th>
+                    <th>NRO. DNI</th>
+                    <th>APELLIDOS Y NOMBRES</th>
+                    <th>P.POND.</th>
+                    <th>ESCUELA</th>
+                    <th>SEDE</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for estudiante in estudiantes %}
+                <tr>
+                    <td>{{ estudiante.numero_matricula }}</td>
+                    <td>{{ estudiante.dni }}</td>
+                    <td>{{ estudiante.apellidos_nombres }}</td>
+                    <td>{{ estudiante.ponderado }}</td>
+                    <td>{{ estudiante.escuela }}</td>
+                    <td>{{ estudiante.sede }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No hay estudiantes que coincidan con los filtros.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
