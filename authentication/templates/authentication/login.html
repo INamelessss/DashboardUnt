@@ -2,19 +2,26 @@
 
 {% block content %}
 <div class="container">
-    <h2>Login</h2>
-    <form id="login-form">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="username">Username:</label>
-            <input type="text" class="form-control" id="username" name="username">
-        </div>
-        <div class="form-group">
-            <label for="password">Password:</label>
-            <input type="password" class="form-control" id="password" name="password">
-        </div>
-        <button type="submit" class="btn btn-primary">Login</button>
-    </form>
+    <div class="container-header">
+      <h1>BSC UNT</h1>
+    </div>
+    <div class="container-body">
+      <form id="login-form">
+          <p>Iniciar Sesion</p>
+          {% csrf_token %}
+          <div class="form-fields">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" class="form-control" id="username" name="username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" class="form-control" id="password" name="password">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Login</button>
+      </form>
+    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

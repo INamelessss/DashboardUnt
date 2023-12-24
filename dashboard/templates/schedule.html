@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container">
     <h1>Horarios</h1>
     <form method="post" id="filter-form">
         {% csrf_token %}
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="form-group">
                     <label for="school">Sede:</label>
                     <select name="school" id="school" class="form-control">
@@ -28,7 +28,7 @@
                     </select>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="form-group">
                     <label for="cycle">Ciclo:</label>
                     <select name="cycle" id="cycle" class="form-control">
@@ -39,7 +39,7 @@
                     </select>
                 </div>
             </div>
-            <div class="col-md-12 text-center mt-3">
+            <div class="col-md-2 text-center mt-3 d-grid">
                 <button type="submit" class="btn btn-primary">Aplicar filtros</button>
             </div>
         </div>
@@ -48,7 +48,7 @@
     <div class="table-responsive mt-4">
         <table class="table table-bordered">
             <thead class="bg-primary text-white">
-                <tr>
+                <tr class="text-center">
                     <th>Hora/Días</th>
                     <th>Lunes</th>
                     <th>Martes</th>
@@ -58,7 +58,7 @@
                     <th>Sábado</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody  class="text-center">
                 {% for i in hours_range %}
                     <tr>
                         <td>{{ i }}</td>
