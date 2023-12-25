@@ -84,66 +84,6 @@
               </li>
               {% endfor %}
             </ul>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Título</th>
-                            <th>Nombres y Apellidos</th>
-                            <th>Tipo de Investigador</th>
-                            <th>Condición del Investigador</th>
-                            <th>Rol</th>
-                            <th>Departamento Académico</th>
-                            <th>Tipo de Investigación</th>
-                            <th>Línea de Investigación</th>
-                            <th>Sub-Línea</th>
-                            <th>Presupuesto</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for research in researchs %}
-                            <tr>
-                                <td>{{ research.code }}</td>
-                                <td>{{ research.title }}</td>
-                                <td>
-                                    {% for teacher in research.teacher.all %}
-                                        - {{ teacher.surname_and_names }} <br>
-                                    {% endfor %}
-                                </td>
-                                <td>
-                                    {% for teacher in research.teacher.all %}
-                                        - {{ teacher.type }} <br>
-                                    {% endfor %}
-                                </td>
-                                <td>
-                                    {% for teacher in research.teacher.all %}
-                                       - {{ teacher.status }} <br>
-                                    {% endfor %}
-                                </td>
-                                <td>
-                                    {% for teacher in research.teacher.all %}
-                                        {% if teacher == research.teacher.first %}
-                                            A <br>
-                                        {% else %}
-                                            CO <br>
-                                        {% endif %}
-                                    {% endfor %}
-                                </td>
-                                <td>
-                                    {% for teacher in research.teacher.all %}
-                                       - {{ teacher.school }} <br>
-                                    {% endfor %}
-                                </td>
-                                <td>{{ research.type_of_research }}</td>
-                                <td>{{ research.research_line }}</td>
-                                <td>{{ research.sub_line }}</td>
-                                <td>{{ research.budget }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
         </div>
     </div>
 </div>
