@@ -148,6 +148,38 @@
     .course-details {
       font-size: 9px;
     }
+
+    .tag-list{
+      display: flex;
+      gap: 7px;
+    }
+
+    .tag-list .tag-item{
+      color: #454545;
+      font-weight: 400;
+      position: relative;
+    }
+
+    .tag-item::after{
+      content: '●';
+      margin-left: 7px;
+    }
+
+    .tag-item:last-child::after{
+      display: none;
+    }
+
+    .tag-item:hover .tag-item-details{
+      display: block;
+    }
+
+    .tag-item-details{
+      display: none;
+      position: absolute;
+      top: 20px;
+      left: 5;
+      z-index: 999999;
+    }
   </style>
 </head>
 

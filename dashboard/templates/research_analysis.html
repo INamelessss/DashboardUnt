@@ -37,6 +37,53 @@
     <div class="row mt-5">
         <div class="col-md-12">
             <h2>Detalles de Proyectos de Investigación</h2>
+            <ul class="list-group" style="font-size: 12px;">
+              {% for research in researchs %}
+              <li class="list-group-item" style="cursor: default;">
+                <div class="d-flex">
+                  <div class="flex-grow-1">
+                    <div>
+                      <h5 class="lead m-0">[{{ research.code }}] - {{ research.title }}</h5>
+                      <div class="py-1" style="font-size: 14px;">
+                        <span title="Tipo de investigacion" class="badge bg-info text-white">
+                          {{ research.type_of_research }}
+                        </span>
+                        <span title="Linea de investigacion: {{ research.research_line }} - {{ research.sub_line }}" class="badge bg-secondary">
+                          <td>{{ research.research_line }}</td>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="tag-list">
+                      {% for teacher in research.teacher.all %}
+                        <div class="tag-item d-flex align-items-center" style="gap: 3px;">
+                          <span class="badge bg-secondary">{{ teacher.school }}</span>
+                          {{ teacher.surname_and_names }}
+                          {% if teacher == research.teacher.first %}
+                            <span>(A)</span>
+                          {% else %}
+                            <span>(CO)</span>
+                          {% endif %}
+                          <div class="card tag-item-details px-1" style="width: max-content;">
+                            <p class="mb-1">
+                              Tipo: {{ teacher.type }}
+                            </p>
+                            <p class="mb-1">
+                              Estado: {{ teacher.status }}
+                            </p>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  <div class="d-grid align-items-center px-3">
+                    <span class="lead" style="width: max-content;">
+                      S/ {{ research.budget }}
+                    </span>
+                  </div>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
