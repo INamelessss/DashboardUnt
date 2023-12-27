@@ -8,6 +8,7 @@ from django.db.models import F, Q
 from django.db.models import Count, Case, When, Value, IntegerField
 from django.db.models.functions import ExtractYear
 from random import randint
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 def course_list(request):
     # Get query parameters from request URL
@@ -233,6 +234,18 @@ def estudiantes(request):
     if filtro_sede:
         estudiantes_filtrados = estudiantes_filtrados.filter(sede=filtro_sede)
 
+    # Paginación
+    elementos_por_pagina = 10
+    paginator = Paginator(estudiantes_filtrados, elementos_por_pagina)
+    pagina = request.GET.get('page', 1)
+
+    try:
+        estudiantes_pagina = paginator.page(pagina)
+    except PageNotAnInteger:
+        estudiantes_pagina = paginator.page(1)
+    except EmptyPage:
+        estudiantes_pagina = paginator.page(paginator.num_pages)
+
     # Estadísticas que no dependen de los filtros
     carrera_con_mas_reprobados = Estudiante.objects.filter(ponderado__lt=13.5).values('escuela').annotate(reprobados_count=Count('id')).order_by('-reprobados_count').first()
     carrera_con_mas_alumnos = Estudiante.objects.values('escuela').annotate(alumnos_count=Count('id')).order_by('-alumnos_count').first()
@@ -258,10 +271,11 @@ def estudiantes(request):
         'mayor_promedio_ponderado': sede_con_mayor_ponderado['promedio_ponderado'] if sede_con_mayor_ponderado else 0,
         'sede_con_menor_ponderado': sede_con_menor_ponderado['sede'] if sede_con_menor_ponderado else 'N/A',
         'menor_promedio_ponderado': sede_con_menor_ponderado['promedio_ponderado'] if sede_con_menor_ponderado else 0,
-        'estudiantes': estudiantes_filtrados,
+        'estudiantes': estudiantes_pagina,
         'carreras': carreras,
         'sedes': sedes,
         'filtro_carrera': filtro_carrera,
         'filtro_sede': filtro_sede,
     }
+
     return render(request, 'estudiantes.html', context)

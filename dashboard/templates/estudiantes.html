@@ -155,6 +155,23 @@
                 {% endfor %}
             </tbody>
         </table>
+        <div class="pagination">
+          <span class="step-links">
+              {% if estudiantes.has_previous %}
+                  <a href="?page=1">&laquo; primera</a>
+                  <a href="?page={{ estudiantes.previous_page_number }}">anterior</a>
+              {% endif %}
+      
+              <span class="current">
+                  Página {{ estudiantes.number }} de {{ estudiantes.paginator.num_pages }}.
+              </span>
+      
+              {% if estudiantes.has_next %}
+                  <a href="?page={{ estudiantes.next_page_number }}">siguiente</a>
+                  <a href="?page={{ estudiantes.paginator.num_pages }}">última &raquo;</a>
+              {% endif %}
+          </span>
+      </div>
     </div>
 </div>
 {% endblock %}
