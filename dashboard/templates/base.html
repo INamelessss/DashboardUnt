@@ -19,6 +19,12 @@
       font-family: Arial, sans-serif;
     }
 
+    a{
+      /* all: unset; */
+      text-decoration: none;
+      cursor: pointer;
+    }
+
     .navbar {
       background-color: #343a40;
       padding: 1rem;
@@ -68,6 +74,62 @@
       background-color: #f8f8f8;
       padding: 2rem;
       border-radius: 10px;
+    }
+
+    .cards-grid{
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(20rem,1fr));
+      gap: 1rem;
+    }
+
+    .contenedor-escuela{
+      border: 1.3px solid #20202050;
+      position: relative;
+      border-radius: 13px;
+      padding: 1.1rem;
+      background-color: #282a2c;
+      display: grid;
+      align-items: end;
+      height: 230px;
+      z-index: 1;
+      overflow: hidden;
+      transition: transform 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      .title{
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 36.6%;
+        padding-inline: .4em;
+        margin: 0;
+        font-size: 28px;
+        font-weight: 600;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: black;
+        background-color: white;
+      }
+    }
+
+    .contenedor-escuela:hover{
+      transform: scale(1.02);
+    }
+
+    .contenedor-escuela::before{
+      position: absolute;
+      content: "";
+      left: 0;
+      bottom: 0;
+      width: 200%;
+      height: 200%;
+      background-image: linear-gradient(49deg, #2b2b2b13 0%, #aaaaaa41 32.5%, #b3b2b24f 37.5%, #ffffff81 50%,
+      #b3b2b24f 67.5%, #aaaaaa41 62.5%, #2b2b2b13 100%);
+      z-index: -1;
+      transition: opacity 250ms ease-in, transform 250ms ease-out;
+      opacity: 1;
+    }
+    .contenedor-escuela:hover::before{
+      opacity: 0.2;
+      transform: translate(-75%,75%);
     }
 
     .schedule-cell {
@@ -180,6 +242,33 @@
       left: 5;
       z-index: 999999;
     }
+
+    
+    .paginator {
+        display: flex;
+        justify-content: flex-end;
+        gap: 3px
+    }
+
+    .paginator-page {
+        border: 1px solid #aaaaaa;
+        background: none;
+        padding: 5px 7px;
+        border-radius: 6px;
+    }
+
+    .paginator-page:focus {
+        outline: none;
+    }
+
+    .paginator-page.active {
+        background-color: #321fdb;
+        color: white;
+    }
+
+    .paginator-page:nth-child(1) {
+        letter-spacing: 1px
+    }
   </style>
 </head>
 
@@ -228,5 +317,131 @@
   <!-- Bootstrap Scripts -->
 
 </body>
+<script>
+  function initTableFunctions(table, options = {
+            busqueda: true,
+            paginable: true,
+            paginacion: 10
+        }) {
+            let datos = Array.from(table.querySelectorAll('tbody tr')).map(e => ({
+                element: e
+            }));
+            let paginacion = options.paginacion;
+            let nPaginas = 0;
+            let currPagina = 1;
+            for (let i = 0; i < datos.length; i++) {
+                let fila = datos[i];
+                fila.valores = Array.from(fila.element.querySelectorAll('.busqueda')).map(e => e.textContent).join('|');
+                fila.pagina = Math.floor(i / paginacion) + 1;
+                console.log(fila.pagina, nPaginas, fila.pagina > nPaginas);
+                fila.pagina > nPaginas && (() => (nPaginas = fila.pagina))();
+            }
 
+            const returnObj = {
+                updateDatos: function() {
+                    datos = Array.from(table.querySelectorAll('tbody tr')).map(e => ({
+                        element: e
+                    }));
+                    for (let i = 0; i < datos.length; i++) {
+                        let fila = datos[i];
+                        fila.valores = Array.from(fila.element.querySelectorAll('.busqueda')).map(e => e
+                            .textContent).join('|');
+                        fila.pagina = Math.floor(i / paginacion) + 1;
+                        fila.pagina > nPaginas && (() => (nPaginas = fila.pagina))();
+                    }
+                    refreshPaginator();
+                    returnObj.paginar(currPagina);
+                },
+                filtrar: function(texto) {
+                    if (!options.busqueda) {
+                        return console.log('Busqueda no habilitada, opcion busqueda puesta como false');
+                    }
+                    console.log('filtrando...', texto)
+                    if (texto === '') {
+                        returnObj.paginar(currPagina);
+                        return 0;
+                    }
+                    for (let dato of datos) {
+                        dato.element.hidden = !dato.valores.toUpperCase().match(texto.toUpperCase());
+                    }
+                },
+                paginar: function(nroPagina) {
+                    if (!options.paginable || datos.length <= paginacion) {
+                        return console.log('Paginacion no disponible');
+                    }
+                    console.log('paginando...');
+                    currPagina = nroPagina;
+                    e_paginator = table.parentNode.querySelector('tfoot div.paginator');
+                    console.log(e_paginator);
+                    if (e_paginator == null) {
+                        refreshPaginator();
+                        e_paginator = table.parentNode.querySelector('tfoot div.paginator');
+                    }
+                    Array.from(e_paginator.children)
+                        .map(e => ((e.textContent === nroPagina + '') ? e.classList.add('active') : e.classList
+                            .remove('active')));
+                    for (let dato of datos) {
+                        dato.element.hidden = !(dato.pagina === nroPagina);
+                    }
+                }
+            }
+
+            const refreshPaginator = function() {
+                if (nPaginas > 1 && options.paginable) {
+                    let a = table.parentNode.querySelector('tfoot')
+                    console.log(a);
+                    if (a != null) {
+                        console.log(a);
+                        a.remove();
+                    }
+                    const t_foot = document.createElement('tfoot');
+                    table.parentNode.appendChild(t_foot);
+                    const t_row = document.createElement('tr');
+                    t_foot.appendChild(t_row);
+                    //const t_divSettings = document.createElement('div');
+                    //t_divSettings.className = 'paginator-options';
+                    //t_foot.appendChild(t_divSettings);
+                    const t_tdPages = document.createElement('td');
+                    t_tdPages.colSpan = '50';
+                    t_row.appendChild(t_tdPages);
+                    const t_divPages = document.createElement('div');
+                    t_divPages.className = 'paginator';
+                    t_tdPages.appendChild(t_divPages);
+
+                    let t_page_first = document.createElement('button');
+                    t_page_first.type = 'button';
+                    t_page_first.className = 'paginator-page';
+                    t_page_first.textContent = '«';
+                    t_page_first.onclick = function() {
+                        returnObj.paginar(1)
+                    };
+                    t_divPages.appendChild(t_page_first);
+
+                    for (let i = 1; i <= nPaginas; i++) {
+                        let t_page_s = t_page_first.cloneNode(true);
+                        t_page_s.textContent = i;
+                        t_page_s.onclick = function() {
+                            returnObj.paginar(i)
+                        };
+                        t_divPages.appendChild(t_page_s);
+                    }
+
+                    let t_page_last = document.createElement('button');
+                    t_page_last.type = 'button';
+                    t_page_last.className = 'paginator-page';
+                    t_page_last.textContent = '»';
+                    t_page_last.onclick = function() {
+                        returnObj.paginar(nPaginas)
+                    };
+                    t_divPages.appendChild(t_page_last);
+                }
+            }
+            refreshPaginator();
+            returnObj.paginar(1);
+            return returnObj
+        }
+</script>
+
+{% block scripts %}
+{% endblock %}
 </html>

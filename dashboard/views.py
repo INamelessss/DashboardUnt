@@ -271,7 +271,7 @@ def estudiantes(request):
         'mayor_promedio_ponderado': sede_con_mayor_ponderado['promedio_ponderado'] if sede_con_mayor_ponderado else 0,
         'sede_con_menor_ponderado': sede_con_menor_ponderado['sede'] if sede_con_menor_ponderado else 'N/A',
         'menor_promedio_ponderado': sede_con_menor_ponderado['promedio_ponderado'] if sede_con_menor_ponderado else 0,
-        'estudiantes': estudiantes_pagina,
+        'estudiantes': estudiantes_filtrados,
         'carreras': carreras,
         'sedes': sedes,
         'filtro_carrera': filtro_carrera,
