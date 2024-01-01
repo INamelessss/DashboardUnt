@@ -247,7 +247,8 @@
     .paginator {
         display: flex;
         justify-content: flex-end;
-        gap: 3px
+        gap: 3px;
+        flex-wrap: wrap;
     }
 
     .paginator-page {
@@ -283,6 +284,9 @@
     <div class="collapse navbar-collapse justify-content-start" id="navbarNav">
       <ul class="navbar-nav">
         <li class="nav-item">
+          <a class="nav-link">Malla Curricular</a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link" href="{% url 'course_list' escuela %}">Cursos</a>
         </li>
         <li class="nav-item">
@@ -292,10 +296,16 @@
           <a class="nav-link" href="{% url 'horario' escuela %}">Horarios</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'estudiantes' escuela %}">Promedios</a>
+          <a class="nav-link" href="{% url 'estudiantes' escuela %}">Alumnos</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'research' escuela %}">Investigaciones</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">Personal administrativo</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link">Infraestructura</a>
         </li>
       </ul>
     </div>

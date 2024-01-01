@@ -9,6 +9,19 @@ from django.db.models import Count, Case, When, Value, IntegerField
 from django.db.models.functions import ExtractYear
 from random import randint
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from roman import fromRoman
+
+
+def genRandomColor():
+    randomHue = randint(0, 359)
+    return f'hsl({randomHue}deg,71%,65%)'
+
+def getColorFromSet(index, set_length):
+    set_length = 1 if(set_length<1) else set_length
+    return f'hsl({index*(360/set_length)%360}deg,71%,65%)'
+
+def sort_by_roman_numeral(course):
+    return fromRoman(course.cycle)
 
 def course_list(request, escuela):
     # Get query parameters from request URL
@@ -18,6 +31,7 @@ def course_list(request, escuela):
 
     # Filter courses based on query parameters
     courses = Course.objects.all()
+
     if course_name:
         courses = courses.filter(name__icontains=course_name)
     if course_cycle:
@@ -36,6 +50,7 @@ def course_list(request, escuela):
         'hl': courses.aggregate(Sum('hl'))['hl__sum'],
     }
 
+    courses = sorted(courses,key=sort_by_roman_numeral)
     context = {
         'escuela':escuela,
         'courses': courses,
@@ -268,8 +283,8 @@ def schedule_view(request, escuela):
 
         courses = courses.prefetch_related('courseschedule_set')
 
-        for course in courses:
-            course.color = f'#{randint(0, 255):02X}{randint(0, 255):02X}{randint(0, 255):02X}'
+        for index, course in enumerate(courses):
+            course.color = getColorFromSet(index, len(courses))
 
     else:
         schools = CourseModel.objects.values_list('headquarters', flat=True).distinct()
@@ -279,7 +294,7 @@ def schedule_view(request, escuela):
         courses = []
 
     # Generate hours range
-    days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     hours_range = []
     start_hour = 7
     end_hour = 22
