@@ -10,7 +10,7 @@ from django.db.models.functions import ExtractYear
 from random import randint
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-def course_list(request):
+def course_list(request, escuela):
     # Get query parameters from request URL
     course_name = request.GET.get('course_name')
     course_cycle = request.GET.get('course_cycle')
@@ -37,6 +37,7 @@ def course_list(request):
     }
 
     context = {
+        'escuela':escuela,
         'courses': courses,
         'total_credits': total_credits['total_credits'],
         'total_courses': total_courses,
@@ -145,7 +146,115 @@ def dashboard(request):
 
     return render(request, 'dashboard.html', context)
 
-def schedule_view(request):
+def docentes(request, escuela):
+    age_range = request.GET.get('age')
+    modality = request.GET.get('modality')
+    category = request.GET.get('category')
+    grade = request.GET.get('grade')
+    school = request.GET.get('school')
+
+    current_year = date.today().year
+
+    age_mapping = {
+        '21-30 years': '21-30',
+        '31-40 years': '31-40',
+        '41-50 years': '41-50',
+        '51-60 years': '51-60',
+        '61+ years': '61+',
+    }
+
+    teachers = Teacher.objects.all()
+
+    teachers = Teacher.objects.annotate(
+        work=current_year - ExtractYear('income'),
+        age=current_year - ExtractYear('birth'),
+    )
+    teachers = teachers.exclude(birth__isnull=True)
+
+    modalidad_options = teachers.values_list('type',flat=True).distinct().order_by('type')
+    categoria_options = teachers.values_list('category',flat=True).distinct().order_by('category')
+    grado_options = teachers.values_list('grade',flat=True).distinct().order_by('grade')
+
+    if age_range:
+        if '-' in age_range:
+            start_age, end_age = age_range.split('-')
+            start_age = start_age.replace('years', '').strip()
+            end_age = end_age.replace('years', '').strip()
+        else:
+            start_age = '61'
+            end_age = '120'
+
+        if start_age and end_age:
+            current_year = date.today().year
+            start_birth_year = current_year - int(end_age) - 1
+            end_birth_year = current_year - int(start_age)
+
+            teachers = teachers.filter(birth__year__range=(start_birth_year, end_birth_year))
+
+    if escuela:
+        teachers = teachers.filter(school=escuela)
+    if modality:
+        teachers = teachers.filter(type=modality)
+    if category:
+        teachers = teachers.filter(category=category)
+    if grade:
+        teachers = teachers.filter(grade=grade)
+
+    # Calculate the degree distribution
+    degree_distribution_data = teachers.values('status').annotate(count=Count('status')).order_by('-count')
+    degree_distribution = [{'label': data['status'], 'data': data['count']} for data in degree_distribution_data]
+
+    # Calculate the contract distribution
+    contract_distribution_data = teachers.values('type').annotate(count=Count('type')).order_by('-count')
+    contract_distribution = [{'label': data['type'], 'data': data['count']} for data in contract_distribution_data]
+
+    # Calculate the number of teachers per school
+    teachers_per_school_data = teachers.values('school').annotate(count=Count('school')).order_by('-count')
+
+    # Calculate the average age of teachers
+    average_age = teachers.aggregate(avg_age=Avg('age'))['avg_age']
+
+    # Filtra los profesores cuya edad es mayor o igual a 70
+    teachers_70_or_older = teachers.filter(age__gte=70)
+
+    # Obtiene la cantidad de profesores cuya edad es mayor o igual a 70
+    count_teachers_70_or_older = teachers_70_or_older.count()
+
+
+    teachers_with_research = Teacher.objects.filter(research__isnull=False).values('school').annotate(count=Count('school'))
+    teachers_without_research = Teacher.objects.filter(research__isnull=True).values('school').annotate(count=Count('school'))
+
+    teachers_per_school_data = []
+    for with_research in teachers_with_research:
+        school = with_research['school']
+        with_count = with_research['count']
+        without_count = next((item['count'] for item in teachers_without_research if item['school'] == school), 0)
+        teachers_per_school_data.append({
+            'school': school,
+            'with_research': with_count,
+            'without_research': without_count,
+        })
+
+    # Calcular el porcentaje
+    percentage_teachers_with_research = (Teacher.objects.filter(research__isnull=False).distinct().count() / Teacher.objects.count()) * 100
+
+    context = {
+        'modalidad_options': modalidad_options,
+        'categoria_options': categoria_options,
+        'grado_options': grado_options,
+        'escuela':escuela,
+        'teachers': teachers,
+        'degree_data': degree_distribution,
+        'contract_data': contract_distribution,
+        'teachers_per_school_data': teachers_per_school_data,
+        'average_age': average_age,
+        'count_teachers_70_or_older': count_teachers_70_or_older,
+        'percentage_teachers_with_research': percentage_teachers_with_research,
+    }
+
+    return render(request, 'docentes.html', context)
+
+def schedule_view(request, escuela):
     if request.method == 'POST':
         selected_school = request.POST['school']
         selected_cycle = request.POST['cycle']
@@ -177,9 +286,10 @@ def schedule_view(request):
     for hour in range(start_hour, end_hour + 1):
         hours_range.append('{:02d}:00'.format(hour))
 
-    return render(request, 'schedule.html', {'courses': courses, 'schools': schools, 'cycles': cycles, 'hours_range': hours_range, 'careers':careers, 'days_of_week':days_of_week})
+    return render(request, 'schedule.html', {
+        'escuela':escuela,'courses': courses, 'schools': schools, 'cycles': cycles, 'hours_range': hours_range, 'careers':careers, 'days_of_week':days_of_week})
 
-def research_analysis(request):
+def research_analysis(request, escuela):
     # Teachers with research
     teachers_with_research = Teacher.objects.filter(research__isnull=False)
 
@@ -213,6 +323,7 @@ def research_analysis(request):
     researchs = Research.objects.all()
 
     context = {
+        'escuela':escuela,
         'school_counts': school_counts,
         'type_counts': type_counts,
         'condition_counts': condition_counts,
@@ -222,7 +333,7 @@ def research_analysis(request):
     }
     return render(request, 'research_analysis.html', context)
 
-def estudiantes(request):
+def estudiantes(request, escuela):
     # Obtenemos los parámetros de los filtros de la solicitud GET
     filtro_carrera = request.GET.get('escuela')
     filtro_sede = request.GET.get('sede')
@@ -259,6 +370,7 @@ def estudiantes(request):
     sedes = Estudiante.objects.values_list('sede', flat=True).distinct()
 
     context = {
+        'escuela':escuela,
         'carrera_con_mas_reprobados': carrera_con_mas_reprobados['escuela'] if carrera_con_mas_reprobados else 'N/A',
         'reprobados_count': carrera_con_mas_reprobados['reprobados_count'] if carrera_con_mas_reprobados else 0,
         'carrera_con_mas_alumnos': carrera_con_mas_alumnos['escuela'] if carrera_con_mas_alumnos else 'N/A',

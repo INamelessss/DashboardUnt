@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <h1>Docentes de las Escuelas de Ingeniería</h1>
+  <form method="GET" action="">
+    <div class="row mt-3 mb-3">
+        <div class="col-md-2">
+            <div class="form-group">
+                <label>Edad:</label>
+                <select class="form-control" name="age" id="age">
+                  <option value="">Todos</option>
+                  <option value="21-30 years">21-30 años</option>
+                  <option value="31-40 years">31-40 años</option>
+                  <option value="41-50 years">41-50 años</option>
+                  <option value="51-60 years">51-60 años</option>
+                  <option value="61+ years">61+ años</option>
+              </select>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-group">
+                <label>Modalidad: </label>
+                
+                <select class="form-control" name="modality" id="modality">
+
+                  <option value="">Todos</option>
+                  {% for modalidad_option in modalidad_options %}
+                  <option {% if request.GET.modality == modalidad_option %} selected {% endif %} value="{{modalidad_option}}">{{modalidad_option}}</option>
+                  {% endfor %}
+              </select>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-group">
+                <label>Categoria:</label>
+                
+                <select class="form-control" name="category" id="category">
+                  <option value="">Todos</option>
+                  {% for categoria_option in categoria_options %}
+                  <option {% if request.GET.category == categoria_option %} selected {% endif %} value="{{categoria_option}}">{{categoria_option}}</option>
+                  {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="form-group">
+                <label>Grado:</label>
+                <select class="form-control" name="grade" id="grade">
+                    <option value="">Todos</option>
+                    {% for grado_option in grado_options %}
+                    <option {% if request.GET.category == grado_option %} selected {% endif %} value="{{grado_option}}">{{grado_option}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="col-md-1 d-grid align-content-end">
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+    </div>
+  </form>
+</div>
+
+<div class="container">
+  <div class="row">
+      <table class="table table-striped rounded">
+          <thead class="bg-primary text-white">
+              <tr class="align-middle">
+                  <th class="text-center">Escuela</th>
+                  <th>Apellidos y nombres</th>
+                  <th class="text-center">Condición</th>
+                  <th class="text-center">Modalidad</th>
+                  <th class="text-center">Categoria</th>
+                  <th class="text-center">Grado</th>
+                  <th class="text-center">Edad</th>
+                  <th class="text-center">Años<br>de trabajo</th>
+              </tr>
+          </thead>
+          <tbody id="tblDatos">
+              {% for teacher in teachers %}
+              <tr>
+                  <td class="text-center">{{ teacher.school }}</td>
+                  <td>{{ teacher.surname_and_names }}</td>
+                  <td class="text-center">{{ teacher.status }}</td>
+                  <td class="text-center">{{ teacher.type }}</td>
+                  <td class="text-center">{{ teacher.category }}</td>
+                  <td class="text-center">{{ teacher.grade }}</td>
+                  <td class="text-center">{{ teacher.age }}</td>
+                  <td class="text-center">{{ teacher.work }}</td>
+              </tr>
+              {% endfor %}
+          </tbody>
+      </table>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-6">
+          <h3 class="mb-3">Distribución por condición</h3>
+          <div class="card">
+              <div class="card-body">
+                  <canvas id="degreeChart" width="200" height="200"></canvas>
+              </div>
+          </div>
+      </div>
+      <div class="col-md-6">
+          <h3 class="mb-3">Distribución por contrato</h3>
+          <div class="card">
+              <div class="card-body">
+                  <canvas id="contractChart" width="200" height="200"></canvas>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <div class="row mt-5">
+      <div class="col-md-12">
+          <h3 class="mb-3">Docentes por escuela</h3>
+          <div class="card">
+              <div class="card-body">
+                  <canvas id="teachersPerSchoolChart" width="400" height="200"></canvas>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <div class="row mt-5 mb-4">
+    <div class="col-md-4">
+      <div class="card bg-light h-100">
+        <div class="card-body d-grid">
+          <h5 class="card-title font-weight-bolder">Edad promedio de los profesores</h5>
+          <p class="card-text mt-auto lead">{{ average_age|floatformat:0 }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-light h-100">
+        <div class="card-body d-grid">
+          <h5 class="card-title font-weight-bolder">Cantidad de profesores mayores de 70 años</h5>
+          <p class="card-text mt-auto lead">{{ count_teachers_70_or_older }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-light h-100">
+        <div class="card-body d-grid">
+          <h5 class="card-title font-weight-bolder">Procentaje de profesores haciendo investigación</h5>
+          <p class="card-text mt-auto lead">{{ percentage_teachers_with_research|floatformat:2 }}%</p>
+        </div>
+      </div>
+    </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+
+      var degreeData = [
+          {% for degree in degree_data %}
+          {
+              label: "{{ degree.label }}",
+              data: {{ degree.data }},
+              backgroundColor: getRandomColor(),
+              borderColor: getRandomColor(),
+              borderWidth: 1
+          },
+          {% endfor %}
+      ];
+
+      var contractData = [
+          {% for contract in contract_data %}
+          {
+              label: "{{ contract.label }}",
+              data: {{ contract.data }},
+              backgroundColor: getRandomColor(),
+              borderColor: getRandomColor(),
+              borderWidth: 1
+          },
+          {% endfor %}
+      ];
+
+      var degreeChart = new Chart(document.getElementById('degreeChart'), {
+          type: 'pie',
+          data: {
+              datasets: [{
+                  data: degreeData.map(degree => degree.data),
+                  backgroundColor: degreeData.map(degree => degree.backgroundColor),
+                  borderColor: degreeData.map(degree => degree.borderColor)
+              }],
+              labels: degreeData.map(degree => degree.label),
+          },
+      });
+
+      var contractChart = new Chart(document.getElementById('contractChart'), {
+          type: 'pie',
+          data: {
+              datasets: [{
+                  data: contractData.map(contract => contract.data),
+                  backgroundColor: contractData.map(contract => contract.backgroundColor),
+                  borderColor: contractData.map(contract => contract.borderColor)
+              }],
+              labels: contractData.map(contract => contract.label),
+          },
+      });
+
+
+      var teachersPerSchoolData = [
+    {% for data in teachers_per_school_data %}
+        {
+            label: "{{ data.school }} (Con Investigaciones)",
+            data: [{{ data.with_research }}],
+            backgroundColor: getRandomColor(),
+            borderColor: getRandomColor(),
+            borderWidth: 1
+        },
+        {
+            label: "{{ data.school }} (Sin Investigaciones)",
+            data: [{{ data.without_research }}],
+            backgroundColor: getRandomColor(),
+            borderColor: getRandomColor(),
+            borderWidth: 1
+        },
+        {% endfor %}
+    ];
+
+    const data = {
+        labels: [
+          {% for data in teachers_per_school_data %}
+            "{{ data.school }}",
+          {% endfor %}
+        ],
+        datasets: [
+          {
+            label: 'Con Investigaciones',
+            data: [
+              {% for data in teachers_per_school_data %}
+                {{ data.with_research }},
+              {% endfor %}
+            ],
+            backgroundColor: getRandomColor(),
+            borderColor: getRandomColor(),
+            borderWidth: 1,
+            stack: 'stack1'
+          },
+          {
+            label: 'Sin Investigaciones',
+            data: [
+              {% for data in teachers_per_school_data %}
+                {{ data.without_research }},
+              {% endfor %}
+            ],
+            backgroundColor: getRandomColor(),
+            borderColor: getRandomColor(),
+            borderWidth: 1,
+            stack: 'stack1'
+          },
+        ]
+      };
+
+      const config = {
+        type: 'bar',
+        data: data,
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: 'Profesores por Escuela con/sin Investigación'
+            },
+          },
+          responsive: true,
+          scales: {
+            x: {
+              stacked: true,
+            },
+            y: {
+              stacked: true
+            }
+          }
+        }
+      };
+
+      var teachersPerSchoolChart = new Chart(document.getElementById('teachersPerSchoolChart'), config);
+
+console.log(teachersPerSchoolData);
+      function getRandomColor() {
+          var letters = '0123456789ABCDEF';
+          var color = '#';
+          for (var i = 0; i < 6; i++) {
+              color += letters[Math.floor(Math.random() * 16)];
+          }
+          return color;
+      }
+
+  });
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const functionesTabla = initTableFunctions(document.getElementById('tblDatos'), {
+            busqueda: true,
+            paginable: true,
+            paginacion: 10
+        });
+</script>
+{% endblock %}
