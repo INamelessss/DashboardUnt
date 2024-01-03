@@ -80,6 +80,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit,minmax(20rem,1fr));
       gap: 1rem;
+      height: calc(230px * 2 + 2rem + 1.4em);
     }
 
     .contenedor-escuela{
@@ -269,6 +270,27 @@
     .paginator-page:nth-child(1) {
         letter-spacing: 1px
     }
+
+    label.toggle:has(:not(:checked))::before{
+      content: 'Abrir';
+      width: 6ch;
+      height: 20px;
+    }
+    label.toggle:has(input:checked)::before{
+      content: 'Cerrar';
+    }
+
+    div:has(>label.toggle input:not(:checked)) + div{
+      padding: 0px !important;
+      height: 0px;
+      transition: ease-out 500ms all;
+    }
+
+    div:has(>label.toggle input:checked) + div{
+      /* height: 700px; */
+      transition: ease-out 500ms all;
+    }
+
   </style>
 </head>
 

@@ -20,7 +20,6 @@ from authentication import views as auth_views
 
 urlpatterns = [
     path('', auth_views.login_view, name='login'),
-    path("__debug__/", include("debug_toolbar.urls")),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard/<str:escuela>/course_list/', views.course_list, name='course_list'),
     path('dashboard/<str:escuela>/docentes/', views.docentes, name='docentes'),
