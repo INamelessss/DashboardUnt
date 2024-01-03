@@ -20,10 +20,11 @@ from authentication import views as auth_views
 
 urlpatterns = [
     path('', auth_views.login_view, name='login'),
-    path('course_list/', views.course_list, name='course_list'),
     path("__debug__/", include("debug_toolbar.urls")),
     path('dashboard/', views.dashboard, name='dashboard'),
-    path('horario/', views.schedule_view, name='horario'),
-    path('research/', views.research_analysis, name='research'),
-    path('estudiantes/', views.estudiantes, name='estudiantes')
+    path('dashboard/<str:escuela>/course_list/', views.course_list, name='course_list'),
+    path('dashboard/<str:escuela>/docentes/', views.docentes, name='docentes'),
+    path('dashboard/<str:escuela>/horario/', views.schedule_view, name='horario'),
+    path('dashboard/<str:escuela>/research/', views.research_analysis, name='research'),
+    path('dashboard/<str:escuela>/estudiantes/', views.estudiantes, name='estudiantes')
 ]

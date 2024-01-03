@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'dashboard.apps.DashboardConfig',
     'authentication',
-    'debug_toolbar'
+    'debug_toolbar',
+    'roman'
 ]
 
 MIDDLEWARE = [
