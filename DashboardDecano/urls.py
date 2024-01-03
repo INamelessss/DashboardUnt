@@ -24,7 +24,9 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard/<str:escuela>/course_list/', views.course_list, name='course_list'),
     path('dashboard/<str:escuela>/docentes/', views.docentes, name='docentes'),
+    path('dashboard/<str:escuela>/malla/', views.malla, name='malla'),
     path('dashboard/<str:escuela>/horario/', views.schedule_view, name='horario'),
     path('dashboard/<str:escuela>/research/', views.research_analysis, name='research'),
-    path('dashboard/<str:escuela>/estudiantes/', views.estudiantes, name='estudiantes')
+    path('dashboard/<str:escuela>/estudiantes/', views.estudiantes, name='estudiantes'),
+    path('dashboard/<str:escuela>/infraestructura/', views.activos, name='activos')
 ]

@@ -5,7 +5,7 @@
     <h2>Participación de Docentes por Escuela</h2>
     <div class="row">
         <div class="col-md-4">
-            <canvas id="school-chart" width="200" height="200"></canvas>
+            <canvas id="researchLineChart" width="200" height="200"></canvas>
         </div>
         <div class="col-md-4">
             <canvas id="type-chart" width="200" height="200"></canvas>
@@ -162,5 +162,40 @@
         }
         return randomColors;
     }
+
+    var researchLineData = {
+        labels: [],
+        datasets: [{
+            data: [],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.6)',
+                'rgba(54, 162, 235, 0.6)',
+                'rgba(255, 206, 86, 0.6)',
+                'rgba(75, 192, 192, 0.6)',
+                'rgba(153, 102, 255, 0.6)',
+                'rgba(255, 159, 64, 0.6)',
+                'rgba(255, 99, 132, 0.6)',
+                'rgba(54, 162, 235, 0.6)',
+                'rgba(255, 206, 86, 0.6)',
+                'rgba(75, 192, 192, 0.6)',
+                'rgba(153, 102, 255, 0.6)',
+            ],
+        }],
+    };
+
+    {% for research_line, count in research_line_counts %}
+    researchLineData.labels.push("{{ research_line }}");
+    researchLineData.datasets[0].data.push({{ count }});
+    {% endfor %}
+
+    var ctx = document.getElementById('researchLineChart').getContext('2d');
+    var myPieChart = new Chart(ctx, {
+        type: 'pie',
+        data: researchLineData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+        },
+    });
 </script>
 {% endblock %}

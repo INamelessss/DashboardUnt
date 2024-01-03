@@ -53,6 +53,18 @@
                 </select>
             </div>
         </div>
+        <div class="col-md-2">
+          <div class="form-group">
+              <label>Sede:</label>
+              
+              <select class="form-control" name="sede" id="sede">
+                <option value="">Todos</option>
+                {% for sede in all_sedes %}
+                    <option value="{{ sede }}" {% if selected_sede == sede %}selected{% endif %}>{{ sede }}</option>
+                {% endfor %}
+              </select>
+          </div>
+      </div>
         <div class="col-md-1 d-grid align-content-end">
             <button type="submit" class="btn btn-primary">Filtrar</button>
         </div>
@@ -141,14 +153,22 @@
   </div>
 
   <div class="row mt-5 mb-4">
-      <div class="col-md-12">
-          <h3 class="mb-3">Docentes por escuela</h3>
+      <div class="col-md-6">
+          <h3 class="mb-3">Docentes por investigación</h3>
           <div class="card">
               <div class="card-body">
                   <canvas id="teachersPerSchoolChart" width="400" height="200"></canvas>
               </div>
           </div>
       </div>
+      <div class="col-md-6">
+        <h3 class="mb-3">Docentes por sede</h3>
+        <div class="card">
+            <div class="card-body">
+                <canvas id="teachersPerSedeChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
   </div>
 
 </div>
@@ -203,7 +223,7 @@
           },
       });
 
-
+      
       var teachersPerSchoolData = [
     {% for data in teachers_per_school_data %}
         {
@@ -288,6 +308,31 @@ console.log(teachersPerSchoolData);
       }
 
   });
+  
+  var ctx = document.getElementById('teachersPerSedeChart').getContext('2d');
+    var teachersPerSedeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ sede_names|safe }},
+            datasets: [{
+                label: 'Número de profesores',
+                data: {{ sede_count|safe }},
+                backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+              yAxes: [{
+      ticks: {
+        beginAtZero: true,
+        min: 0 
+      }
+    }]
+            }
+        }
+    });
 </script>
 {% endblock %}
 

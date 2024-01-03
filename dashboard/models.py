@@ -60,7 +60,21 @@ class CourseModel(models.Model):
 
     def __str__(self):
         return self.course
+    
+class Sede(models.Model):
+    name = models.CharField(max_length=100)
 
+class CourseAssignment(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    sede = models.ForeignKey(Sede, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('course', 'teacher', 'sede')
+
+    def __str__(self):
+        return f"{self.course.name} - {self.teacher.surname_and_names} - {self.sede.name}"
+    
 class CourseSchedule(models.Model):
     DAYS_OF_WEEK = [
         ('Monday', 'Monday'),
@@ -92,8 +106,22 @@ class Research(models.Model):
 
 class Estudiante(models.Model):
     numero_matricula = models.CharField(max_length=10, unique=True)
-    dni = models.CharField(max_length=8, unique=True)
     apellidos_nombres = models.CharField(max_length=200)
-    ponderado = models.DecimalField(max_digits=5, decimal_places=2)
     escuela = models.CharField(max_length=100)
     sede = models.CharField(max_length=100)
+
+class Enrollment(models.Model):
+    student = models.ForeignKey(Estudiante, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    times_taken = models.IntegerField(default=1)
+
+class Activo(models.Model):
+    numero_pc = models.CharField(max_length=20)
+    codigo = models.CharField(max_length=20)
+    descripcion = models.CharField(max_length=100)
+    marca = models.CharField(max_length=50)
+    modelo = models.CharField(max_length=50)
+    serie = models.CharField(max_length=50)
+    estado = models.CharField(max_length=20)
+    observaciones = models.TextField()
+    ambiente = models.CharField(max_length=50)

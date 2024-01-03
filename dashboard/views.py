@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Course, CourseModel, Teacher, Research, Estudiante
+from .models import Course, CourseModel, Teacher, Research, Estudiante, CourseAssignment, Sede, Enrollment, Activo
 from django.db import models
 from django.db.models import Count, Avg, Min, Max
 from django.db.models import Sum
@@ -10,6 +10,8 @@ from django.db.models.functions import ExtractYear
 from random import randint
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from roman import fromRoman
+import json
+from collections import Counter
 
 
 def genRandomColor():
@@ -23,7 +25,157 @@ def getColorFromSet(index, set_length):
 def sort_by_roman_numeral(course):
     return fromRoman(course.cycle)
 
+def to_roman(number):
+    num_map = [(1000, 'M'), (900, 'CM'), (500, 'D'), (400, 'CD'), (100, 'C'), (90, 'XC'),
+               (50, 'L'), (40, 'XL'), (10, 'X'), (9, 'IX'), (5, 'V'), (4, 'IV'), (1, 'I')]
+    roman = ''
+
+    while number > 0:
+        for i, r in num_map:
+            while number >= i:
+                roman += r
+                number -= i
+
+    return roman
+
+def from_roman(roman):
+    roman_numerals = {
+        'I': 1,
+        'V': 5,
+        'X': 10,
+        'L': 50,
+        'C': 100,
+        'D': 500,
+        'M': 1000
+    }
+    integer_value = 0
+    prev_value = 0
+
+    for char in reversed(roman):
+        value = roman_numerals[char]
+        if value < prev_value:
+            integer_value -= value
+        else:
+            integer_value += value
+        prev_value = value
+
+    return integer_value
+
 def course_list(request, escuela):
+    # Get query parameters from request URL
+    course_name = request.GET.get('course_name')
+    course_cycle = request.GET.get('course_cycle')
+
+    # Filter courses based on query parameters
+    courses = Course.objects.all()
+
+    if course_name:
+        courses = courses.filter(name__icontains=course_name)
+    if course_cycle:
+        courses = courses.filter(cycle=course_cycle)
+
+
+    enrollments = Enrollment.objects.select_related('course', 'student')
+    student_lowest_cycles = {}
+    for enrollment in enrollments:
+        student_id = enrollment.student.id
+        course_cycle_number = from_roman(enrollment.course.cycle)
+        if student_id not in student_lowest_cycles or course_cycle_number < student_lowest_cycles[student_id]:
+            student_lowest_cycles[student_id] = course_cycle_number
+
+    students_per_cycle_counts = {}
+    for enrollment in enrollments:
+        student_id = enrollment.student.id
+        cycle_number = student_lowest_cycles[student_id]
+        times_taken = enrollment.times_taken
+        if cycle_number not in students_per_cycle_counts:
+            students_per_cycle_counts[cycle_number] = {1: 0, 2: 0, 3: 0, 4: 0}
+        if times_taken in students_per_cycle_counts[cycle_number] and students_per_cycle_counts[cycle_number][times_taken] == 0:
+            students_per_cycle_counts[cycle_number][times_taken] += 1
+
+    students_per_cycle_chart = {
+        'cycles': [],
+        'first_time_counts': [],
+        'second_time_counts': [],
+        'third_time_counts': [],
+        'fourth_time_counts': [],
+    }
+    print(students_per_cycle_counts)
+    for cycle_number, counts in students_per_cycle_counts.items():
+        cycle_roman = to_roman(cycle_number)
+        students_per_cycle_chart['cycles'].append(cycle_roman)
+        students_per_cycle_chart['first_time_counts'].append(counts[1]) 
+        students_per_cycle_chart['second_time_counts'].append(counts[2])
+        students_per_cycle_chart['third_time_counts'].append(counts[3])
+        students_per_cycle_chart['fourth_time_counts'].append(counts[4])
+
+    total_credits = courses.aggregate(total_credits=models.Sum('credits'))
+    total_courses = courses.count()
+
+    enrollment_counts = Enrollment.objects.values(
+    'course__name', 'course__cycle', 'student__sede'
+    ).annotate(
+        total=Count('student__id', distinct=True)
+    )
+
+    course_enrollment_counts = []
+    for count in enrollment_counts:
+        course_enrollment_counts.append({
+            'name': count['course__name'],
+            'cycle': count['course__cycle'],
+            'sede': count['student__sede'],
+            'total': count['total']
+        })
+
+    chart_data = {
+        'ht': courses.aggregate(Sum('ht'))['ht__sum'],
+        'hp': courses.aggregate(Sum('hp'))['hp__sum'],
+        'hl': courses.aggregate(Sum('hl'))['hl__sum'],
+    }
+
+    course_sede_counts = {course.id: {'Trujillo': 0, 'El Valle': 0} for course in courses}
+
+    for count in course_enrollment_counts:
+        course_id = Course.objects.get(name=count['name'], cycle=count['cycle']).id
+        sede_name = count['sede']
+        total = count['total']
+        if course_id in course_sede_counts:
+            course_sede_counts[course_id][sede_name] = total
+
+    for course in courses:
+        course.trujillo_count = course_sede_counts[course.id]['Trujillo']
+        course.el_valle_count = course_sede_counts[course.id]['El Valle']
+
+    normalized_sede_counts = {}
+    for count in course_enrollment_counts:
+        sede_name = count['sede'].upper()  # Convertir a mayúsculas
+        course_id = Course.objects.get(name=count['name'], cycle=count['cycle']).id
+        total = count['total']
+        if course_id not in normalized_sede_counts:
+            normalized_sede_counts[course_id] = {'TRUJILLO': 0, 'EL VALLE': 0}
+        normalized_sede_counts[course_id][sede_name] = total
+
+    for course in courses:
+        course_id = course.id
+        if course_id in normalized_sede_counts:
+            course.trujillo_count = normalized_sede_counts[course_id]['TRUJILLO']
+            course.el_valle_count = normalized_sede_counts[course_id]['EL VALLE']
+
+
+    courses = sorted(courses,key=sort_by_roman_numeral)
+    context = {
+        'escuela':escuela,
+        'students_per_cycle_chart':students_per_cycle_chart,
+        'courses': courses,
+        'total_credits': total_credits['total_credits'],
+        'total_courses': total_courses,
+        'chart_data': chart_data,
+        'course_enrollment_counts': course_enrollment_counts,
+        'students_per_cycle_chart': students_per_cycle_chart,
+    }
+    return render(request, 'cursos/course_list.html', context)
+
+def malla(request, escuela):
     # Get query parameters from request URL
     course_name = request.GET.get('course_name')
     course_cycle = request.GET.get('course_cycle')
@@ -58,8 +210,7 @@ def course_list(request, escuela):
         'total_courses': total_courses,
         'chart_data': chart_data,
     }
-    return render(request, 'cursos/course_list.html', context)
-
+    return render(request, 'cursos/malla.html', context)
 
 def dashboard(request):
     age_range = request.GET.get('age')
@@ -167,6 +318,7 @@ def docentes(request, escuela):
     category = request.GET.get('category')
     grade = request.GET.get('grade')
     school = request.GET.get('school')
+    selected_sede = request.GET.get('sede')
 
     current_year = date.today().year
 
@@ -214,7 +366,11 @@ def docentes(request, escuela):
         teachers = teachers.filter(category=category)
     if grade:
         teachers = teachers.filter(grade=grade)
-
+    if selected_sede:
+        teachers_ids = CourseAssignment.objects.filter(sede__name=selected_sede).values_list('teacher', flat=True)
+        teachers = Teacher.objects.filter(id__in=teachers_ids)
+        teachers = teachers.annotate(age=current_year - ExtractYear('birth'))
+        
     # Calculate the degree distribution
     degree_distribution_data = teachers.values('status').annotate(count=Count('status')).order_by('-count')
     degree_distribution = [{'label': data['status'], 'data': data['count']} for data in degree_distribution_data]
@@ -238,6 +394,13 @@ def docentes(request, escuela):
 
     teachers_with_research = Teacher.objects.filter(research__isnull=False).values('school').annotate(count=Count('school'))
     teachers_without_research = Teacher.objects.filter(research__isnull=True).values('school').annotate(count=Count('school'))
+
+    teachers_per_sede_data = CourseAssignment.objects.values('sede__name').annotate(count=Count('teacher', distinct=True)).order_by('-count')
+    teachers_per_sede = [{'sede': data['sede__name'], 'count': data['count']} for data in teachers_per_sede_data]
+    sede_names = [data['sede'] for data in teachers_per_sede]
+    sede_counts = [data['count'] for data in teachers_per_sede]
+
+    all_sedes = Sede.objects.all().values_list('name', flat=True)
 
     teachers_per_school_data = []
     for with_research in teachers_with_research:
@@ -264,6 +427,11 @@ def docentes(request, escuela):
         'teachers_per_school_data': teachers_per_school_data,
         'average_age': average_age,
         'count_teachers_70_or_older': count_teachers_70_or_older,
+        'teachers_per_sede': teachers_per_sede,
+        'sede_names':sede_names,
+        'sede_count':sede_counts,
+        'all_sedes': all_sedes,
+        'selected_sede':selected_sede,
         'percentage_teachers_with_research': percentage_teachers_with_research,
     }
 
@@ -336,6 +504,8 @@ def research_analysis(request, escuela):
     total_projects = Research.objects.count()
 
     researchs = Research.objects.all()
+    research_line_counts = Counter(researchs.values_list('research_line', flat=True))
+    research_line_counts_list = list(research_line_counts.items())
 
     context = {
         'escuela':escuela,
@@ -344,23 +514,39 @@ def research_analysis(request, escuela):
         'condition_counts': condition_counts,
         'total_budget': total_budget['total_budget'],
         'total_projects': total_projects,
+        'research_line_counts': research_line_counts_list,
         'researchs': researchs,
     }
     return render(request, 'research_analysis.html', context)
 
-def estudiantes(request, escuela):
-    # Obtenemos los parámetros de los filtros de la solicitud GET
-    filtro_carrera = request.GET.get('escuela')
-    filtro_sede = request.GET.get('sede')
+def roman_numeral(n):
+    roman_numerals = {
+        1: 'I',
+        2: 'II',
+        3: 'III',
+        4: 'IV',
+        5: 'V',
+        6: 'VI',
+        7: 'VII',
+        8: 'VIII',
+        9: 'IX',
+        10: 'X'
+    }
+    return roman_numerals.get(n, str(n))
 
-    # Filtramos los estudiantes según la carrera y la sede seleccionadas, si se han proporcionado
+def estudiantes(request, escuela):
+    filtro_sede = request.GET.get('sede')
+    filtro_ciclo = request.GET.get('ciclo')
+    courses = Course.objects.all()
+
     estudiantes_filtrados = Estudiante.objects.all()
-    if filtro_carrera:
-        estudiantes_filtrados = estudiantes_filtrados.filter(escuela=filtro_carrera)
+
     if filtro_sede:
         estudiantes_filtrados = estudiantes_filtrados.filter(sede=filtro_sede)
+    
+    if filtro_ciclo:
+        estudiantes_filtrados = estudiantes_filtrados.filter(enrollment__course__cycle=filtro_ciclo).distinct()
 
-    # Paginación
     elementos_por_pagina = 10
     paginator = Paginator(estudiantes_filtrados, elementos_por_pagina)
     pagina = request.GET.get('page', 1)
@@ -372,37 +558,145 @@ def estudiantes(request, escuela):
     except EmptyPage:
         estudiantes_pagina = paginator.page(paginator.num_pages)
 
-    # Estadísticas que no dependen de los filtros
-    carrera_con_mas_reprobados = Estudiante.objects.filter(ponderado__lt=13.5).values('escuela').annotate(reprobados_count=Count('id')).order_by('-reprobados_count').first()
-    carrera_con_mas_alumnos = Estudiante.objects.values('escuela').annotate(alumnos_count=Count('id')).order_by('-alumnos_count').first()
-    carrera_con_menor_ponderado = Estudiante.objects.values('escuela').annotate(min_ponderado=Min('ponderado')).order_by('min_ponderado').first()
-    carrera_con_mayor_ponderado = Estudiante.objects.values('escuela').annotate(max_ponderado=Max('ponderado')).order_by('-max_ponderado').first()
-    sede_con_mayor_ponderado = Estudiante.objects.values('sede').annotate(promedio_ponderado=Avg('ponderado')).order_by('-promedio_ponderado').first()
-    sede_con_menor_ponderado = Estudiante.objects.values('sede').annotate(promedio_ponderado=Avg('ponderado')).order_by('promedio_ponderado').first()
-
-    # Lista de carreras y sedes para los filtros
     carreras = Estudiante.objects.values_list('escuela', flat=True).distinct()
     sedes = Estudiante.objects.values_list('sede', flat=True).distinct()
 
+    enrollments = Enrollment.objects.select_related('course', 'student')
+    student_lowest_cycles = {}
+    for enrollment in enrollments:
+        student_id = enrollment.student.id
+        course_cycle_number = from_roman(enrollment.course.cycle)
+        if student_id not in student_lowest_cycles or course_cycle_number < student_lowest_cycles[student_id]:
+            student_lowest_cycles[student_id] = course_cycle_number
+            
+    students_per_cycle_counts = [0] * 10
+
+    for numero in range(0, 10):
+        for valor in student_lowest_cycles.values():
+            if valor == numero + 1:
+                students_per_cycle_counts[numero] += 1
+
+    sede_counts = estudiantes_filtrados.values('sede').annotate(total=Count('id')).distinct()
+    sedes_labels = [item['sede'] for item in sede_counts]
+    sedes_totals = [item['total'] for item in sede_counts]
+
+    ciclo_labels = [f"{roman_numeral(i)}" for i in range(1, 11)]
+    ciclo_totals = students_per_cycle_counts
+
+    sede_data = json.dumps({
+        'labels': sedes_labels,
+        'datasets': [{
+            'label': 'Total de Alumnos por Sede',
+            'data': sedes_totals,
+            'backgroundColor': 'rgba(75, 192, 192, 0.2)',
+            'borderColor': 'rgba(75, 192, 192, 1)',
+            'borderWidth': 1,
+        }]
+    })
+
+    ciclo_data = json.dumps({
+        'labels': ciclo_labels,
+        'datasets': [{
+            'label': 'Total de Alumnos por Ciclo',
+            'data': ciclo_totals,
+            'backgroundColor': 'rgba(255, 99, 132, 0.2)', 
+            'borderColor': 'rgba(255, 99, 132, 1)', 
+            'borderWidth': 1,
+        }]
+    })
+
     context = {
-        'escuela':escuela,
-        'carrera_con_mas_reprobados': carrera_con_mas_reprobados['escuela'] if carrera_con_mas_reprobados else 'N/A',
-        'reprobados_count': carrera_con_mas_reprobados['reprobados_count'] if carrera_con_mas_reprobados else 0,
-        'carrera_con_mas_alumnos': carrera_con_mas_alumnos['escuela'] if carrera_con_mas_alumnos else 'N/A',
-        'alumnos_count': carrera_con_mas_alumnos['alumnos_count'] if carrera_con_mas_alumnos else 0,
-        'carrera_con_menor_ponderado': carrera_con_menor_ponderado['escuela'] if carrera_con_menor_ponderado else 'N/A',
-        'min_ponderado': carrera_con_menor_ponderado['min_ponderado'] if carrera_con_menor_ponderado else 0,
-        'carrera_con_mayor_ponderado': carrera_con_mayor_ponderado['escuela'] if carrera_con_mayor_ponderado else 'N/A',
-        'max_ponderado': carrera_con_mayor_ponderado['max_ponderado'] if carrera_con_mayor_ponderado else 0,
-        'sede_con_mayor_ponderado': sede_con_mayor_ponderado['sede'] if sede_con_mayor_ponderado else 'N/A',
-        'mayor_promedio_ponderado': sede_con_mayor_ponderado['promedio_ponderado'] if sede_con_mayor_ponderado else 0,
-        'sede_con_menor_ponderado': sede_con_menor_ponderado['sede'] if sede_con_menor_ponderado else 'N/A',
-        'menor_promedio_ponderado': sede_con_menor_ponderado['promedio_ponderado'] if sede_con_menor_ponderado else 0,
+        'escuela': escuela,
         'estudiantes': estudiantes_filtrados,
         'carreras': carreras,
         'sedes': sedes,
-        'filtro_carrera': filtro_carrera,
         'filtro_sede': filtro_sede,
+        'filtro_ciclo': filtro_ciclo,
+        'sede_data': sede_data,
+        'ciclo_data': ciclo_data, 
     }
 
     return render(request, 'estudiantes.html', context)
+
+def activos(request, escuela):
+    # Inicialización de variables para filtros
+    ambientes = Activo.objects.values_list('ambiente', flat=True).distinct()
+    descripciones = Activo.objects.values_list('descripcion', flat=True).distinct()
+    estados = Activo.objects.values_list('estado', flat=True).distinct()
+
+    # Filtros iniciales (puedes ajustar estos según sea necesario)
+    filtro_ambiente = request.POST.get('ambiente', None)
+    filtro_descripcion = request.POST.get('descripcion', None)
+    filtro_estado = request.POST.get('estado', None)
+
+    # Base QuerySet
+    queryset = Activo.objects.all()
+
+    # Aplicar filtros si se proporcionan
+    if filtro_ambiente:
+        queryset = queryset.filter(ambiente=filtro_ambiente)
+    if filtro_descripcion:
+        queryset = queryset.filter(descripcion=filtro_descripcion)
+    if filtro_estado:
+        queryset = queryset.filter(estado=filtro_estado)
+
+    # Datos para el gráfico de pastel (Estado de equipos)
+    datos_pastel = queryset.values('estado').annotate(total=Count('estado'))
+
+    # Base QuerySet para los datos de barras
+    datos_barras_qs = queryset.values('ambiente', 'descripcion').annotate(total=Count('id')).order_by('ambiente')
+
+    datos_barras = {}
+    for item in datos_barras_qs:
+        ambiente = item['ambiente']
+        descripcion = item['descripcion']
+        total = item['total']
+        if ambiente not in datos_barras:
+            datos_barras[ambiente] = {}
+        datos_barras[ambiente][descripcion] = total
+    colores = [
+        'rgba(255, 99, 132, 0.2)',  # Rojo
+        'rgba(54, 162, 235, 0.2)',  # Azul
+        'rgba(255, 206, 86, 0.2)',  # Amarillo
+        'rgba(75, 192, 192, 0.2)',  # Verde
+        'rgba(153, 102, 255, 0.2)', # Púrpura
+        # ... más colores según sea necesario ...
+    ]
+    # Estructurar los datasets para Chart.js
+    datasets = []
+    for index, descripcion in enumerate(descripciones):
+        # Aquí nos aseguramos de que 'data' es una lista de enteros, que es serializable en JSON
+        dataset = {
+            'label': descripcion,
+            'data': [datos_barras[ambiente].get(descripcion, 0) for ambiente in ambientes],
+            'backgroundColor': colores[index % len(colores)]
+        }
+        datasets.append(dataset)
+
+    datos_grafico_barras = {
+        'labels': list(ambientes),  # Convertir QuerySet a lista
+        'datasets': datasets
+    }
+
+    datos_grafico_barras_json = json.dumps(datos_grafico_barras)
+
+    # Datos para la tabla resumen
+    tabla_resumen = queryset.values('ambiente', 'descripcion', 'estado').annotate(total=Count('id'))
+
+    datos_pastel_json = json.dumps(list(datos_pastel), default=str)
+    datos_barras_json = json.dumps(list(datos_barras), default=str)
+    tabla_resumen_json = json.dumps(list(tabla_resumen), default=str)
+
+    return render(request, 'infraestructura.html', {
+        'datos_pastel_json': datos_pastel_json,
+        'datos_barras_json': datos_barras_json,
+        'tabla_resumen_json': tabla_resumen_json,
+        'datos_grafico_barras_json': datos_grafico_barras_json,
+        'datos_pastel': datos_pastel,
+        'datos_barras': datos_barras,
+        'tabla_resumen': tabla_resumen,
+        'ambientes': ambientes,
+        'descripciones': descripciones,
+        'estados': estados,
+        'escuela':escuela,
+    })

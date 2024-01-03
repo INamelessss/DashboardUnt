@@ -5,12 +5,6 @@
         <h1 class="mb-4">Currículas de las Escuelas de Ingeniería</h1>
         <form method="GET" action="{% url 'course_list' escuela %}">
             <div class="row mb-3">
-                <div class="col-md-5">
-                    <div class="form-group">
-                        <label for="course_name">Nombre del curso:</label>
-                        <input type="text" class="form-control" name="course_name" id="course_name">
-                    </div>
-                </div>
                 <div class="col-md-2">
                     <div class="form-group">
                         <label for="course_cycle">Ciclo del curso:</label>
@@ -29,16 +23,6 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="course_type">Tipo de curso:</label>
-                        <select class="form-select" name="course_type" id="course_type">
-                            <option value="">Todos</option>
-                            <option value="ELECTIVO">Electivo</option>
-                            <option value="OBLIGATORIO">Obligatorio</option>
-                        </select>
-                    </div>
-                </div>
                 <div class="col-md-2 d-grid align-content-end">
                     <button type="submit" class="btn btn-primary" style="align-self: baseline;">Filtrar</button>
                 </div>
@@ -50,27 +34,20 @@
                 <thead class="bg-primary text-white">
                     <tr class="align-middle">
                         <th>Curso</th>
-                        <th class="text-center">Tipo</th>
-                        <th class="text-center">Créditos</th>
                         <th class="text-center">Ciclo</th>
-                        <th class="text-center">Horas<br>de teoría</th>
-                        <th class="text-center">Horas<br>de práctica</th>
-                        <th class="text-center">Horas de<br>laboratorio</th>
+                        <th class="text-center">Alumnos matriculados sede Trujillo</th>
+                        <th class="text-center">Alumnos matriculados sede el Valle</th>
                     </tr>
                 </thead>
                 <tbody id="tblDatos">
-                    <!-- Loop over courses and display them in the table -->
                     {% for course in courses %}
-                        <tr>
-                            <td>{{ course.name }}</td>
-                            <td class="text-center">{{ course.type }}</td>
-                            <td class="text-center">{{ course.credits }}</td>
-                            <td class="text-center">{{ course.cycle }}</td>
-                            <td class="text-center">{{ course.ht }}</td>
-                            <td class="text-center">{{ course.hp }}</td>
-                            <td class="text-center">{{ course.hl }}</td>
-                        </tr>
-                    {% endfor %}
+        <tr>
+            <td>{{ course.name }}</td>
+            <td class="text-center">{{ course.cycle }}</td>
+            <td class="text-center">{{ course.trujillo_count }}</td>
+            <td class="text-center">{{ course.el_valle_count }}</td>
+        </tr>
+    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -86,40 +63,49 @@
 
         <div class="card mb-4">
             <div class="card-body">
-                <canvas id="chart" width="800" height="400"></canvas>
+                <canvas id="studentsPerCycleChart" width="800" height="400"></canvas>
             </div>
         </div>
     </div>
 
     <script>
-        // Use Chart.js to create the crescent-shaped chart
-        var ctx = document.getElementById('chart').getContext('2d');
-        var chart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Horas de teoría', 'Horas de práctica', 'Horas de laboratorio'],
-                datasets: [{
-                    data: [
-                        {{ chart_data.ht }},
-                        {{ chart_data.hp }},
-                        {{ chart_data.hl }}
-                    ],
-                    backgroundColor: ['yellow', 'red', 'orange']
-                }]
-            },
-            options: {
-                animation: {
-                    animateScale: true
+     document.addEventListener('DOMContentLoaded', function () {
+    var ctx = document.getElementById('studentsPerCycleChart').getContext('2d');
+    var studentsPerCycleChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ students_per_cycle_chart.cycles|safe }},
+            datasets: [
+                {
+                    label: '1ra Vez',
+                    data: {{ students_per_cycle_chart.first_time_counts|safe }},
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)'
                 },
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                    },
+                {
+                    label: '2da Vez',
+                    data: {{ students_per_cycle_chart.second_time_counts|safe }},
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)'
                 },
+                {
+                    label: '3ra Vez',
+                    data: {{ students_per_cycle_chart.third_time_counts|safe }},
+                    backgroundColor: 'rgba(255, 206, 86, 0.5)'
+                },
+                {
+                    label: '4ta Vez',
+                    data: {{ students_per_cycle_chart.fourth_time_counts|safe }},
+                    backgroundColor: 'rgba(153, 102, 255, 0.5)'
+                }
+            ]
+        },
+        options: {
+            scales: {
+                xAxes: [{ stacked: true }],
+                yAxes: [{ stacked: true }]
             }
-        });
+        }
+    });
+});
     </script>
 {% endblock %}
 

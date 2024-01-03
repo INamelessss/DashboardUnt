@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Estado de los Activos</h1>
+    <!-- Formulario de Filtros -->
+    <form method="POST" action="">
+        {% csrf_token %}
+        <div class="row mb-3">
+            <!-- Filtro por Ambiente -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="ambiente">Ambiente:</label>
+                    <select class="form-select" name="ambiente" id="ambiente">
+                        <option value="">Todos</option>
+                        {% for ambiente in ambientes %}
+                            <option value="{{ ambiente }}">{{ ambiente }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <!-- Filtro por Descripción -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="descripcion">Descripción:</label>
+                    <select class="form-select" name="descripcion" id="descripcion">
+                        <option value="">Todos</option>
+                        {% for descripcion in descripciones %}
+                            <option value="{{ descripcion }}">{{ descripcion }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <!-- Filtro por Estado -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="estado">Estado:</label>
+                    <select class="form-select" name="estado" id="estado">
+                        <option value="">Todos</option>
+                        {% for estado in estados %}
+                            <option value="{{ estado }}">{{ estado }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-12 d-grid align-content-end">
+                <button type="submit" class="btn btn-primary" style="align-self: baseline;">Filtrar</button>
+            </div>
+        </div>
+    </form>
+    <script id="datos-pastel" type="application/json">{{ datos_pastel_json|safe }}</script>
+    <script id="datos-barras" type="application/json">{{ datos_barras_json|safe }}</script>
+    <script id="tabla-resumen" type="application/json">{{ tabla_resumen_json|safe }}</script>
+    <script id="datos-grafico-barras" type="application/json">{{ datos_grafico_barras_json|safe }}</script>    
+    <!-- Tabla de Resumen -->
+    <div class="table-responsive rounded">
+        <table class="table table-striped">
+            <thead class="bg-primary text-white">
+                <tr>
+                    <th>Ambiente</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in tabla_resumen %}
+                    <tr>
+                        <td>{{ item.ambiente }}</td>
+                        <td>{{ item.descripcion }}</td>
+                        <td>{{ item.estado }}</td>
+                        <td>{{ item.total }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Gráficos -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <canvas id="graficoPastel" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <canvas id="graficoBarras" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Recuperar datos de los gráficos
+        var datosPastel = JSON.parse(document.getElementById('datos-pastel').textContent);
+        var datosBarras = JSON.parse(document.getElementById('datos-barras').textContent);
+
+        // Configuración y creación del gráfico de pastel
+        var ctxPastel = document.getElementById('graficoPastel').getContext('2d');
+        var graficoPastel = new Chart(ctxPastel, {
+            type: 'pie',
+            data: {
+                labels: datosPastel.map(item => item.estado),
+                datasets: [{
+                    label: 'Total por Estado',
+                    data: datosPastel.map(item => item.total),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        // ... más colores según sea necesario ...
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        // ... más colores según sea necesario ...
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                }
+            }
+        });
+
+        // Configuración y creación del gráfico de barras
+        var ctxBarras = document.getElementById('graficoBarras').getContext('2d');
+        var graficoBarras = new Chart(ctxBarras, {
+            type: 'bar',
+            data: {
+                labels: datosBarras.map(item => item.descripcion),
+                datasets: datosBarras.map((item, index) => ({
+                    label: item.ambiente,
+                    data: [item.total],
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 1
+                }))
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        // Recuperar los datos del gráfico de barras apiladas
+        var datosGraficoBarras = JSON.parse(document.getElementById('datos-grafico-barras').textContent);
+
+        // Inicializar Chart.js para el gráfico de barras apiladas
+        var ctxBarras = document.getElementById('graficoBarras').getContext('2d');
+        var graficoBarras = new Chart(ctxBarras, {
+            type: 'bar',
+            data: datosGraficoBarras,
+            options: {
+                scales: {
+                    x: {
+                        stacked: true,
+                    },
+                    y: {
+                        stacked: true
+                    }
+                },
+                responsive: true
+            }
+        });
+    });
+    </script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const functionesTabla = initTableFunctions(document.getElementById('tblDatos'), {
+            busqueda: true,
+            paginable: true,
+            paginacion: 10
+        });
+</script>
+{% endblock %}

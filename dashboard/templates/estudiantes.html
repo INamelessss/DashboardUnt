@@ -8,13 +8,20 @@
           <form method="get" class="form-inline">
             <div class="row">
               <div class="col-10">
-                <label class="my-1 mr-2" for="escuela">Carrera:</label>
-                <select name="escuela" class="form-control">
-                    <option value="">Selecciona una carrera</option>
-                    {% for carrera in carreras %}
-                    <option value="{{ carrera }}" {% if carrera == filtro_carrera %}selected{% endif %}>{{ carrera }}</option>
-                    {% endfor %}
-                </select>
+                <label class="my-1 mr-2" for="ciclo">Ciclo:</label>
+                  <select name="ciclo" class="form-control">
+                      <option value="">Selecciona un ciclo</option>
+                      <option value="I" {% if ciclo == 'I' %}selected{% endif %}>I</option>
+                      <option value="II" {% if ciclo == 'II' %}selected{% endif %}>II</option>
+                      <option value="III" {% if ciclo == 'III' %}selected{% endif %}>III</option>
+                      <option value="IV" {% if ciclo == 'IV' %}selected{% endif %}>IV</option>
+                      <option value="V" {% if ciclo == 'V' %}selected{% endif %}>V</option>
+                      <option value="VI" {% if ciclo == 'VI' %}selected{% endif %}>VI</option>
+                      <option value="VII" {% if ciclo == 'VII' %}selected{% endif %}>VII</option>
+                      <option value="VIII" {% if ciclo == 'VIII' %}selected{% endif %}>VIII</option>
+                      <option value="IX" {% if ciclo == 'IX' %}selected{% endif %}>IX</option>
+                      <option value="X" {% if ciclo == 'X' %}selected{% endif %}>X</option>
+                  </select>
                 <!-- Mantener el filtro de sede si ya está seleccionado -->
                 {% if filtro_sede %}
                 <input type="hidden" name="sede" value="{{ filtro_sede }}">
@@ -55,9 +62,7 @@
           <thead>
               <tr>
                   <th>NRO. MAT.</th>
-                  <th>NRO. DNI</th>
                   <th>APELLIDOS Y NOMBRES</th>
-                  <th>P.POND.</th>
                   <th>ESCUELA</th>
                   <th>SEDE</th>
               </tr>
@@ -66,9 +71,7 @@
               {% for estudiante in estudiantes %}
               <tr>
                   <td>{{ estudiante.numero_matricula }}</td>
-                  <td>{{ estudiante.dni }}</td>
                   <td>{{ estudiante.apellidos_nombres }}</td>
-                  <td>{{ estudiante.ponderado }}</td>
                   <td>{{ estudiante.escuela }}</td>
                   <td>{{ estudiante.sede }}</td>
               </tr>
@@ -81,78 +84,24 @@
       </table>
   </div>
   <h1 class="mb-4">Estadísticas</h1>
-  <div class="row">
-      <div class="col-lg-6">
-          <div class="card mb-4">
+      <div class="row mt-5 mb-4">
+        <div class="col-md-6">
+            <h3 class="mb-3">Alumnos por sede</h3>
+            <div class="card">
+                <div class="card-body">
+                    <canvas id="sedeChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+          <h3 class="mb-3">Alumnos por ciclo</h3>
+          <div class="card">
               <div class="card-body">
-                  <h5 class="card-title">Estadísticas de Carrera</h5>
-                  <ul class="list-group list-group-flush">
-                    <li class="list-group-item">
-                      <div>
-                        <h6 class="lead">Carrera con mayor cantidad de ponderados reprobatorios:</h6>
-                        <div class="d-flex px-3">
-                          <p class="flex-grow-1 m-0">{{ carrera_con_mas_reprobados }}</p>
-                          <span><b>{{ reprobados_count }}</b></span>
-                        </div>
-                      </div>
-                    </li>
-                    <li class="list-group-item">
-                      <div>
-                        <h6 class="lead">Carrera con mayor cantidad de alumnos:</h6>
-                        <div class="d-flex px-3">
-                          <p class="flex-grow-1 m-0">{{ carrera_con_mas_alumnos }}</p>
-                          <span><b>{{ alumnos_count }}</b></span>
-                        </div>
-                      </div>
-                    </li>
-                    <li class="list-group-item">
-                      <div>
-                        <h6 class="lead">Carrera con menor promedio ponderado:</h6>
-                        <div class="d-flex px-3">
-                          <p class="flex-grow-1 lead-0">{{ carrera_con_menor_ponderado }}</p>
-                          <span><b>{{ min_ponderado }}</b></span>
-                        </div>
-                      </div>
-                    </li>
-                    <li class="list-group-item">
-                      <div>
-                        <h6 class="lead">Carrera con mayor promedio ponderado:</h6>
-                        <div class="d-flex px-3">
-                          <p class="flex-grow-1 lead-0">{{ carrera_con_mayor_ponderado }}</p>
-                          <span><b>{{ max_ponderado }}</b></span>
-                        </div>
-                      </div>
-                    </li>
-                  </ul>
+                  <canvas id="cicloChart" width="400" height="200"></canvas>
               </div>
           </div>
       </div>
-      <div class="col-lg-6">
-          <div class="card mb-4">
-              <div class="card-body">
-                  <h5 class="card-title">Estadísticas de Sede </h5>
-                  <ul class="list-group list-group-flush">
-                    <li class="list-group-item">
-                      <div>
-                        <h6 class="lead">Sede con mayor promedio ponderado:</h6>
-                        <div class="d-flex px-3">
-                          <p class="flex-grow-1 m-0">{{ sede_con_mayor_ponderado }}</p>
-                          <span><b>{{ mayor_promedio_ponderado }}</b></span>
-                        </div>
-                      </div>
-                    </li>
-                    <li class="list-group-item">
-                      <div>
-                        <h6 class="lead">Sede con menor promedio ponderado:</h6>
-                        <div class="d-flex px-3">
-                          <p class="flex-grow-1 m-0">{{ sede_con_menor_ponderado }}</p>
-                          <span><b>{{ menor_promedio_ponderado }}</b></span>
-                        </div>
-                      </div>
-                    </li>
-                  </ul>
-              </div>
-          </div>
+    </div>
   </div>
 
 </div>
@@ -166,5 +115,25 @@
             paginable: true,
             paginacion: 10
         });
+// Obtén los datos del gráfico de barras horizontal desde el contexto
+var sedeData = JSON.parse('{{ sede_data|escapejs }}');
+
+// Obtén los datos del gráfico de barras vertical desde el contexto
+var cicloData = JSON.parse('{{ ciclo_data|escapejs }}');
+
+// Configura y renderiza el gráfico de barras horizontal
+var sedeChartCanvas = document.getElementById('sedeChart').getContext('2d');
+var sedeChart = new Chart(sedeChartCanvas, {
+    type: 'horizontalBar',
+    data: sedeData
+});
+
+// Configura y renderiza el gráfico de barras vertical
+var cicloChartCanvas = document.getElementById('cicloChart').getContext('2d');
+var cicloChart = new Chart(cicloChartCanvas, {
+    type: 'bar',
+    data: cicloData
+});
+      
 </script>
 {% endblock %}
