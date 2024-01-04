@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class="container">
-        <h1 class="mb-4">Currículas de las Escuelas de Ingeniería</h1>
+        <h1 class="mb-4">Malla curricular de la Escuela de {{escuela}}</h1>
         <form method="GET" action="{% url 'course_list' escuela %}">
             <div class="row mb-3">
                 <div class="col-md-5">
