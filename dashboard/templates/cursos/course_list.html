@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class="container">
-        <h1 class="mb-4">Currículas de las Escuelas de Ingeniería</h1>
+        <h1 class="mb-4">Currículas de las Escuelas de {{escuela}}</h1>
         <form method="GET" action="{% url 'course_list' escuela %}">
             <div class="row mb-3">
                 <div class="col-md-2">
@@ -41,7 +41,7 @@
                 </thead>
                 <tbody id="tblDatos">
                     {% for course in courses %}
-        <tr>
+        <tr onclick="hidrateModalStudents('{{course.name}}')">
             <td>{{ course.name }}</td>
             <td class="text-center">{{ course.cycle }}</td>
             <td class="text-center">{{ course.trujillo_count }}</td>
@@ -66,6 +66,26 @@
                 <canvas id="studentsPerCycleChart" width="800" height="400"></canvas>
             </div>
         </div>
+    </div>
+
+    <div id="students-modal" hidden style="position: fixed; top: 0; bottom: 0; left: 0; right: 0; background-color: #45454570; overflow: hidden;">
+      <div style="position: relative; display: grid; place-items: center; height: 100%; left: 0; right: 0;">
+        <div class="card" style="width: 70%;">
+          <div class="card-header" style="display: flex;">
+            <h3 class="m-0" style="flex-grow: 1;">
+              Alumos del curso <span data-template="course-name"></span>
+            </h3>
+            <button class="btn btn-danger" onclick="controlModalStudents(false)">
+              X
+            </button>
+          </div>
+          <div class="card-body">
+            <table>
+
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -117,5 +137,29 @@
             paginable: true,
             paginacion: 10
         });
+
+  function hidrateModalStudents(courseName, courseId){
+    const modal = document.querySelector('#students-modal');
+    const titleTemplate = document.querySelector('span[data-template="course-name"]')
+    titleTemplate.textContent = courseName;
+    controlModalStudents(true);
+  }
+
+  function keyboardCloseModalListener({key}){
+    if(key==='Escape'){
+      controlModalStudents(false);
+    }
+  }
+
+  function controlModalStudents(open=true){
+    const modal = document.querySelector('#students-modal');
+
+    if(open){
+      document.addEventListener('keydown',keyboardCloseModalListener)
+    }else{
+      document.removeEventListener('keydown',keyboardCloseModalListener)
+    }
+    modal.hidden = !open;
+  }
 </script>
 {% endblock %}

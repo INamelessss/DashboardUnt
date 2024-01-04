@@ -2,13 +2,13 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">Estado de los Activos</h1>
+    <h1 class="mb-4">Estado de los Activos de la escuela de {{escuela}}</h1>
     <!-- Formulario de Filtros -->
     <form method="POST" action="">
         {% csrf_token %}
         <div class="row mb-3">
             <!-- Filtro por Ambiente -->
-            <div class="col-md-4">
+            <div class="col-12 col-md-4">
                 <div class="form-group">
                     <label for="ambiente">Ambiente:</label>
                     <select class="form-select" name="ambiente" id="ambiente">
@@ -20,7 +20,7 @@
                 </div>
             </div>
             <!-- Filtro por Descripción -->
-            <div class="col-md-4">
+            <div class="col-12 col-md-3">
                 <div class="form-group">
                     <label for="descripcion">Descripción:</label>
                     <select class="form-select" name="descripcion" id="descripcion">
@@ -32,7 +32,7 @@
                 </div>
             </div>
             <!-- Filtro por Estado -->
-            <div class="col-md-4">
+            <div class="col-12 col-md-3">
                 <div class="form-group">
                     <label for="estado">Estado:</label>
                     <select class="form-select" name="estado" id="estado">
@@ -43,7 +43,7 @@
                     </select>
                 </div>
             </div>
-            <div class="col-md-12 d-grid align-content-end">
+            <div class="col-12 col-md-2 d-grid align-content-end">
                 <button type="submit" class="btn btn-primary" style="align-self: baseline;">Filtrar</button>
             </div>
         </div>
@@ -63,7 +63,7 @@
                     <th>Total</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="tblDatos">
                 {% for item in tabla_resumen %}
                     <tr>
                         <td>{{ item.ambiente }}</td>
