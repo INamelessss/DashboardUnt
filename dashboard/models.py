@@ -114,6 +114,7 @@ class Enrollment(models.Model):
     student = models.ForeignKey(Estudiante, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     times_taken = models.IntegerField(default=1)
+    period = models.CharField(max_length=10)
 
 class Activo(models.Model):
     numero_pc = models.CharField(max_length=20)

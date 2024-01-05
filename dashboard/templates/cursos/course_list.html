@@ -41,7 +41,7 @@
                 </thead>
                 <tbody id="tblDatos">
                     {% for course in courses %}
-        <tr onclick="hidrateModalStudents('{{course.name}}')">
+        <tr onclick="hidrateModalStudents('{{course.name}}',{{course.id}})">
             <td>{{ course.name }}</td>
             <td class="text-center">{{ course.cycle }}</td>
             <td class="text-center">{{ course.trujillo_count }}</td>
@@ -80,8 +80,32 @@
             </button>
           </div>
           <div class="card-body">
-            <table>
-
+            <div class="row mb-3">
+              <div class="col-12">
+                <input id="buscarAlumno" placeholder="Buscar por nombre y apellidos" type="text" class="form-control">
+              </div>
+            </div>
+            <table class="table table-striped">
+              <thead class="bg-primary text-white">
+                <tr>
+                  <th>Codigo</th>
+                  <th>Alumno</th>
+                  <th>Sede</th>
+                  <th>Nro de Veces</th>
+                </tr>
+              </thead>
+              <tbody id="tblAlumnos">
+                <tr><td colspan="4"> Cargando... </td></tr> 
+                <tr><td colspan="4"> Cargando... </td></tr> 
+                <tr><td colspan="4"> Cargando... </td></tr> 
+                <tr><td colspan="4"> Cargando... </td></tr> 
+                <tr><td colspan="4"> Cargando... </td></tr> 
+                <tr><td colspan="4"> Cargando... </td></tr> 
+                <tr><td colspan="4"> Cargando... </td></tr> 
+                <tr><td colspan="4"> Cargando... </td></tr> 
+                <tr><td colspan="4"> Cargando... </td></tr> 
+                <tr><td colspan="4"> Cargando... </td></tr> 
+              </tbody>
             </table>
           </div>
         </div>
@@ -137,13 +161,41 @@
             paginable: true,
             paginacion: 10
         });
+  const functionesAlumnos = initTableFunctions(document.getElementById('tblAlumnos'), {
+            busqueda: true,
+            paginable: true,
+            paginacion: 10
+        });
+  const txtBusqueda = document.getElementById('buscarAlumno');
+  txtBusqueda.addEventListener('keyup', (({
+      target
+  }) => {
+    functionesAlumnos.filtrar(target.value)
+  }));
 
   function hidrateModalStudents(courseName, courseId){
     const modal = document.querySelector('#students-modal');
     const titleTemplate = document.querySelector('span[data-template="course-name"]')
     titleTemplate.textContent = courseName;
+    fetch(`/api/matriculados/${courseId}`)
+      .then(response=>response.json())
+      .then(data=>{
+        const tblAlumnos = document.querySelector('#tblAlumnos')
+        tblAlumnos.innerHTML = '';
+        console.log(tblAlumnos);
+        data.forEach(alumno=>{
+          row = document.createElement('tr')
+          htmlTemplate=`<td class='busqueda'>${alumno.student_code}</td><td class='busqueda'>${alumno.student_names}</td><td class='busqueda'>${alumno.student_sede}</td><td>${alumno.times}</td>`
+          row.innerHTML = htmlTemplate
+          tblAlumnos.appendChild(row)
+        })
+        functionesAlumnos.updateDatos();
+      })
+      .catch(error=>console.error(error));
     controlModalStudents(true);
   }
+
+
 
   function keyboardCloseModalListener({key}){
     if(key==='Escape'){
@@ -153,7 +205,6 @@
 
   function controlModalStudents(open=true){
     const modal = document.querySelector('#students-modal');
-
     if(open){
       document.addEventListener('keydown',keyboardCloseModalListener)
     }else{

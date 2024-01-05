@@ -27,5 +27,6 @@ urlpatterns = [
     path('dashboard/<str:escuela>/horario/', views.schedule_view, name='horario'),
     path('dashboard/<str:escuela>/research/', views.research_analysis, name='research'),
     path('dashboard/<str:escuela>/estudiantes/', views.estudiantes, name='estudiantes'),
-    path('dashboard/<str:escuela>/infraestructura/', views.activos, name='activos')
+    path('dashboard/<str:escuela>/infraestructura/', views.activos, name='activos'),
+    path('api/matriculados/<int:curso>', views.api_course_students, name='api.matriculados')
 ]
