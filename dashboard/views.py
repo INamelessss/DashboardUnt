@@ -12,6 +12,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from roman import fromRoman
 import json
 from collections import Counter
+from django.http import JsonResponse
 
 
 def genRandomColor():
@@ -23,7 +24,7 @@ def getColorFromSet(index, set_length):
     return f'hsl({index*(360/set_length)%360}deg,71%,65%)'
 
 def sort_by_roman_numeral(course):
-    return fromRoman(course.cycle)
+    return int(course.cycle) if course.cycle.isdigit() else from_roman(course.cycle.upper())
 
 def to_roman(number):
     num_map = [(1000, 'M'), (900, 'CM'), (500, 'D'), (400, 'CD'), (100, 'C'), (90, 'XC'),
@@ -79,7 +80,7 @@ def course_list(request, escuela):
     student_lowest_cycles = {}
     for enrollment in enrollments:
         student_id = enrollment.student.id
-        course_cycle_number = from_roman(enrollment.course.cycle)
+        course_cycle_number = int(enrollment.course.cycle) if enrollment.course.cycle.isdigit() else from_roman(enrollment.course.cycle.upper())
         if student_id not in student_lowest_cycles or course_cycle_number < student_lowest_cycles[student_id]:
             student_lowest_cycles[student_id] = course_cycle_number
 
@@ -700,3 +701,26 @@ def activos(request, escuela):
         'estados': estados,
         'escuela':escuela,
     })
+
+def api_course_students(request,curso):
+    course_obj = Course.objects.get(id=curso)
+    print('api_course_students: ',curso)
+
+    
+    enrollments = Enrollment.objects.filter(course=curso)
+
+    enrolled_students = [
+        {
+            'id': enrollment.id,
+            'student_id': enrollment.student.id,
+            'student_names': enrollment.student.apellidos_nombres,
+            'student_code': enrollment.student.numero_matricula,
+            'student_sede': enrollment.student.sede,
+            'times': enrollment.times_taken,
+            'period': enrollment.period,
+        }
+        for enrollment in enrollments
+    ]
+
+    print('enrollments: ', enrolled_students)
+    return JsonResponse(list(enrolled_students), safe=False)
