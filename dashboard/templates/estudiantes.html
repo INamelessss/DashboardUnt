@@ -125,7 +125,17 @@ var cicloData = JSON.parse('{{ ciclo_data|escapejs }}');
 var sedeChartCanvas = document.getElementById('sedeChart').getContext('2d');
 var sedeChart = new Chart(sedeChartCanvas, {
     type: 'horizontalBar',
-    data: sedeData
+    data: sedeData,
+    options: {
+      scales: {
+        xAxes: [{
+          ticks: {
+            beginAtZero: true,
+            min: 0 
+          }
+        }]
+      }
+    }
 });
 
 // Configura y renderiza el gráfico de barras vertical

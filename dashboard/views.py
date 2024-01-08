@@ -26,6 +26,9 @@ def getColorFromSet(index, set_length):
 def sort_by_roman_numeral(course):
     return int(course.cycle) if course.cycle.isdigit() else from_roman(course.cycle.upper())
 
+def sort_by_roman_numeral2(course):
+    return int(course) if course.isdigit() else from_roman(course.upper())
+
 def to_roman(number):
     num_map = [(1000, 'M'), (900, 'CM'), (500, 'D'), (400, 'CD'), (100, 'C'), (90, 'XC'),
                (50, 'L'), (40, 'XL'), (10, 'X'), (9, 'IX'), (5, 'V'), (4, 'IV'), (1, 'I')]
@@ -566,7 +569,7 @@ def estudiantes(request, escuela):
     student_lowest_cycles = {}
     for enrollment in enrollments:
         student_id = enrollment.student.id
-        course_cycle_number = from_roman(enrollment.course.cycle)
+        course_cycle_number = sort_by_roman_numeral2(enrollment.course.cycle)
         if student_id not in student_lowest_cycles or course_cycle_number < student_lowest_cycles[student_id]:
             student_lowest_cycles[student_id] = course_cycle_number
             
