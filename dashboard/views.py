@@ -672,7 +672,7 @@ def activos(request, escuela):
         # Aquí nos aseguramos de que 'data' es una lista de enteros, que es serializable en JSON
         dataset = {
             'label': descripcion,
-            'data': [datos_barras[ambiente].get(descripcion, 0) for ambiente in ambientes],
+            'data': [datos_barras.get(ambiente, {}).get(descripcion, 0) for ambiente in ambientes],
             'backgroundColor': colores[index % len(colores)]
         }
         datasets.append(dataset)
@@ -691,6 +691,8 @@ def activos(request, escuela):
     datos_barras_json = json.dumps(list(datos_barras), default=str)
     tabla_resumen_json = json.dumps(list(tabla_resumen), default=str)
 
+    print(datos_barras_json)
+    print(datos_grafico_barras_json)
     return render(request, 'infraestructura.html', {
         'datos_pastel_json': datos_pastel_json,
         'datos_barras_json': datos_barras_json,

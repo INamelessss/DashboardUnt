@@ -213,7 +213,20 @@
           },
           options: {
             responsive: false,
+            plugins: {
+      datalabels: {
+          color: 'black', // Color del texto de las etiquetas, puede ser negro u otro que contraste bien con tus colores de fondo.
+          textAlign: 'center',
+          font: {
+              weight: 'bold'
+          },
+          formatter: (value, context) => {
+              return context.chart.data.labels[context.dataIndex] + '\n' + value;
           }
+      }
+    }
+          },
+          plugins: [ChartDataLabels]
       });
 
       var contractChart = new Chart(document.getElementById('contractChart'), {
@@ -227,7 +240,20 @@
           },
           options: {
             responsive: false,
+            plugins: {
+      datalabels: {
+          color: 'black', // Color del texto de las etiquetas, puede ser negro u otro que contraste bien con tus colores de fondo.
+          textAlign: 'center',
+          font: {
+              weight: 'bold'
+          },
+          formatter: (value, context) => {
+              return context.chart.data.labels[context.dataIndex] + '\n' + value;
           }
+      }
+    }
+          },
+          plugins: [ChartDataLabels]
       });
 
       
@@ -294,6 +320,16 @@
               text: 'Profesores por Escuela con/sin Investigación'
             },
           },
+          datalabels: {
+          color: 'black', // Color del texto de las etiquetas, puede ser negro u otro que contraste bien con tus colores de fondo.
+          textAlign: 'center',
+          font: {
+              weight: 'bold'
+          },
+          formatter: (value, context) => {
+              return context.chart.data.labels[context.dataIndex] + '\n' + value;
+          }
+      },
           responsive: true,
           scales: {
             x: {
@@ -303,7 +339,8 @@
               stacked: true
             }
           }
-        }
+        },
+        plugins: [ChartDataLabels]
       };
 
       var teachersPerSchoolChart = new Chart(document.getElementById('teachersPerSchoolChart'), config);
@@ -335,10 +372,25 @@ console.log(teachersPerSchoolData);
       ticks: {
         beginAtZero: true,
         min: 0 
-      }
+      },
+      
     }]
-            }
-        }
+            },
+            plugins: {
+      datalabels: {
+          color: 'black', // Color del texto de las etiquetas, puede ser negro u otro que contraste bien con tus colores de fondo.
+          textAlign: 'center',
+          font: {
+              weight: 'bold'
+          },
+          formatter: (value, context) => {
+              return context.chart.data.labels[context.dataIndex] + '\n' + value;
+          }
+      }
+    }
+            
+        },
+        plugins: [ChartDataLabels]
     });
 </script>
 {% endblock %}

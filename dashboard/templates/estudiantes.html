@@ -124,20 +124,32 @@ var cicloData = JSON.parse('{{ ciclo_data|escapejs }}');
 // Configura y renderiza el gráfico de barras horizontal
 var sedeChartCanvas = document.getElementById('sedeChart').getContext('2d');
 var sedeChart = new Chart(sedeChartCanvas, {
-    type: 'horizontalBar',
+    type: 'bar',
     data: sedeData,
     options: {
+      indexAxis: 'y', // Esto hace que el gráfico de barras sea horizontal en Chart.js v3
       scales: {
-        xAxes: [{
-          ticks: {
-            beginAtZero: true,
-            min: 0 
+        x: { // 'xAxes' se cambia a 'x' en la v3
+          beginAtZero: true,
+          min: 0 
+        }
+        // Asegúrate de que todas las demás opciones estén actualizadas según la nueva sintaxis
+      },
+      plugins: {
+      datalabels: {
+          color: 'black', // Color del texto de las etiquetas, puede ser negro u otro que contraste bien con tus colores de fondo.
+          textAlign: 'center',
+          font: {
+              weight: 'bold'
+          },
+          formatter: (value, context) => {
+              return context.chart.data.labels[context.dataIndex] + '\n' + value;
           }
-        }]
       }
     }
+    },
+    plugins: [ChartDataLabels]
 });
-
 // Configura y renderiza el gráfico de barras vertical
 var cicloChartCanvas = document.getElementById('cicloChart').getContext('2d');
 var cicloChart = new Chart(cicloChartCanvas, {
