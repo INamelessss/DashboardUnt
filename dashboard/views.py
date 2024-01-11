@@ -87,15 +87,20 @@ def course_list(request, escuela):
         if student_id not in student_lowest_cycles or course_cycle_number < student_lowest_cycles[student_id]:
             student_lowest_cycles[student_id] = course_cycle_number
 
+    unique_student_ids = set()
+
     students_per_cycle_counts = {}
     for enrollment in enrollments:
         student_id = enrollment.student.id
-        cycle_number = student_lowest_cycles[student_id]
-        times_taken = enrollment.times_taken
-        if cycle_number not in students_per_cycle_counts:
-            students_per_cycle_counts[cycle_number] = {1: 0, 2: 0, 3: 0, 4: 0}
-        if times_taken in students_per_cycle_counts[cycle_number] and students_per_cycle_counts[cycle_number][times_taken] == 0:
-            students_per_cycle_counts[cycle_number][times_taken] += 1
+        if student_id not in unique_student_ids:
+          unique_student_ids.add(student_id)
+          cycle_number = student_lowest_cycles[student_id]
+          times_taken = enrollment.times_taken
+          if cycle_number not in students_per_cycle_counts:
+              students_per_cycle_counts[cycle_number] = {1: 0, 2: 0, 3: 0, 4: 0}
+          if times_taken in students_per_cycle_counts[cycle_number]:
+              
+              students_per_cycle_counts[cycle_number][times_taken] += 1
 
     students_per_cycle_chart = {
         'cycles': [],
@@ -104,7 +109,7 @@ def course_list(request, escuela):
         'third_time_counts': [],
         'fourth_time_counts': [],
     }
-    print(students_per_cycle_counts)
+
     for cycle_number, counts in students_per_cycle_counts.items():
         cycle_roman = to_roman(cycle_number)
         students_per_cycle_chart['cycles'].append(cycle_roman)
@@ -164,7 +169,6 @@ def course_list(request, escuela):
         if course_id in normalized_sede_counts:
             course.trujillo_count = normalized_sede_counts[course_id]['TRUJILLO']
             course.el_valle_count = normalized_sede_counts[course_id]['EL VALLE']
-
 
     courses = sorted(courses,key=sort_by_roman_numeral)
     context = {
@@ -627,6 +631,7 @@ def activos(request, escuela):
     ambientes = Activo.objects.values_list('ambiente', flat=True).distinct()
     descripciones = Activo.objects.values_list('descripcion', flat=True).distinct()
     estados = Activo.objects.values_list('estado', flat=True).distinct()
+    computadores = Activo.objects.values_list('numero_pc', flat=True).distinct()
 
     # Filtros iniciales (puedes ajustar estos según sea necesario)
     filtro_ambiente = request.POST.get('ambiente', None)
@@ -649,6 +654,11 @@ def activos(request, escuela):
 
     # Base QuerySet para los datos de barras
     datos_barras_qs = queryset.values('ambiente', 'descripcion').annotate(total=Count('id')).order_by('ambiente')
+
+    computadores = computadores.exclude(numero_pc="-")
+    computadores = computadores.values('numero_pc', 'ambiente').annotate(total=Count('id')).order_by('ambiente').distinct().count()
+    
+    print(computadores)
 
     datos_barras = {}
     for item in datos_barras_qs:
