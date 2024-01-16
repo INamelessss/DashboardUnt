@@ -1,5 +1,11 @@
 from django.db import models
 
+class Sede(models.Model):
+    name = models.CharField(max_length=100)
+
+class Period(models.Model):
+    period = models.CharField(max_length=20)
+
 class Course(models.Model):
     school = models.CharField(max_length=100)
     code = models.CharField(max_length=100)
@@ -10,6 +16,11 @@ class Course(models.Model):
     ht = models.IntegerField()
     hp = models.IntegerField()
     hl = models.IntegerField()
+    period = models.ForeignKey(Period, on_delete=models.CASCADE, default=1)
+    headquarters = models.ForeignKey(Sede, on_delete=models.CASCADE, default=1)
+    section = models.CharField(max_length=1)
+    hours = models.IntegerField(default=2)
+    classroom = models.CharField(max_length=20)
 
 class Teacher(models.Model):
     STATUS_CHOICES = (
@@ -31,38 +42,6 @@ class Teacher(models.Model):
     grade = models.CharField(max_length=100)
     birth = models.DateField()
     income = models.DateField()
-
-class CourseModel(models.Model):
-    SEMESTER_CHOICES = [
-        ('Spring', 'Spring'),
-        ('Summer', 'Summer'),
-        ('Fall', 'Fall'),
-    ]
-    HEADQUARTERS_CHOICES = [
-        ('Headquarters A', 'Headquarters A'),
-        ('Headquarters B', 'Headquarters B'),
-        ('Headquarters C', 'Headquarters C'),
-    ]
-    CYCLE_CHOICES = [
-        ('Cycle 1', 'Cycle 1'),
-        ('Cycle 2', 'Cycle 2'),
-        ('Cycle 3', 'Cycle 3'),
-    ]
-
-    semester = models.CharField(max_length=20, choices=SEMESTER_CHOICES)
-    headquarters = models.CharField(max_length=20, choices=HEADQUARTERS_CHOICES)
-    cycle = models.CharField(max_length=20, choices=CYCLE_CHOICES)
-    section = models.CharField(max_length=1)
-    career = models.CharField(max_length=50)
-    course = models.CharField(max_length=50)
-    hours = models.IntegerField()
-    classroom = models.CharField(max_length=20)
-
-    def __str__(self):
-        return self.course
-    
-class Sede(models.Model):
-    name = models.CharField(max_length=100)
 
 class CourseAssignment(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
@@ -86,7 +65,7 @@ class CourseSchedule(models.Model):
         ('Sunday', 'Sunday'),
     ]
 
-    course_model = models.ForeignKey(CourseModel, on_delete=models.CASCADE, default=1)
+    course_model = models.ForeignKey(Course, on_delete=models.CASCADE, default=1)
     day = models.CharField(max_length=20, choices=DAYS_OF_WEEK)
     type = models.CharField(max_length=50)
     start_time = models.TimeField()
@@ -109,12 +88,13 @@ class Estudiante(models.Model):
     apellidos_nombres = models.CharField(max_length=200)
     escuela = models.CharField(max_length=100)
     sede = models.CharField(max_length=100)
+    period = models.ForeignKey(Period, on_delete=models.CASCADE, default=1)
 
 class Enrollment(models.Model):
     student = models.ForeignKey(Estudiante, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     times_taken = models.IntegerField(default=1)
-    period = models.CharField(max_length=10)
+    period = models.ForeignKey(Period, on_delete=models.CASCADE, null=True, blank=True)
 
 class Activo(models.Model):
     numero_pc = models.CharField(max_length=20)

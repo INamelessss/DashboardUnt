@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Course, CourseModel, Teacher, Research, Estudiante, CourseAssignment, Sede, Enrollment, Activo
+from .models import Course, Teacher, Research, Estudiante, CourseAssignment, Sede, Enrollment, Activo
 from django.db import models
 from django.db.models import Count, Avg, Min, Max
 from django.db.models import Sum
@@ -451,11 +451,11 @@ def schedule_view(request, escuela):
         selected_cycle = request.POST['cycle']
         selected_career = request.POST['career']
 
-        courses = CourseModel.objects.filter(headquarters=selected_school, cycle=selected_cycle, career=selected_career)
+        courses = Course.objects.filter(headquarters=selected_school, cycle=selected_cycle, career=selected_career)
 
-        schools = CourseModel.objects.values_list('headquarters', flat=True).distinct()
-        cycles = CourseModel.objects.values_list('cycle', flat=True).distinct()
-        careers = CourseModel.objects.values_list('career', flat=True).distinct()
+        schools = Course.objects.values_list('headquarters', flat=True).distinct()
+        cycles = Course.objects.values_list('cycle', flat=True).distinct()
+        careers = Course.objects.values_list('school', flat=True).distinct()
 
         courses = courses.prefetch_related('courseschedule_set')
 
@@ -463,9 +463,9 @@ def schedule_view(request, escuela):
             course.color = getColorFromSet(index, len(courses))
 
     else:
-        schools = CourseModel.objects.values_list('headquarters', flat=True).distinct()
-        cycles = CourseModel.objects.values_list('cycle', flat=True).distinct()
-        careers = CourseModel.objects.values_list('career', flat=True).distinct()
+        schools = Course.objects.values_list('headquarters', flat=True).distinct()
+        cycles = Course.objects.values_list('cycle', flat=True).distinct()
+        careers = Course.objects.values_list('school', flat=True).distinct()
 
         courses = []
 
