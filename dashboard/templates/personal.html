@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block escuela %}
+  {{escuela}}
+{% endblock %}
+{% block content %}
+<div class="container">
+  <h1>Personal administrativo de la Escuelas de {{escuela}}</h1>
+  <div class="row mb-3">
+    <div class="col-12">
+      <input id="txtBusqueda" placeholder="Buscar por nombre y apellidos" type="text" class="form-control">
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+      <table class="table table-striped rounded">
+          <thead class="bg-primary text-white">
+              <tr class="align-middle">
+                  <th class="text-center">Escuela</th>
+                  <th>Apellidos y nombres</th>
+                  <th class="text-center">Correo Electronico</th>
+                  <th class="text-center">Celular</th>
+              </tr>
+          </thead>
+          <tbody id="tblDatos">
+              {% for employee in employees %}
+              <tr>
+                  <td class="text-center">{{ employee.school }}</td>
+                  <td class="busqueda">{{ employee.surname_and_names }}</td>
+                  <td class="text-center">{{ employee.email }}</td>
+                  <td class="text-center">{{ employee.phone_number }}</td>
+              </tr>
+              {% endfor %}
+          </tbody>
+      </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const functionesTabla = initTableFunctions(document.getElementById('tblDatos'), {
+            busqueda: true,
+            paginable: true,
+            paginacion: 10
+        });
+
+  const txtBusqueda = document.getElementById('txtBusqueda');
+  txtBusqueda.addEventListener('keyup', (({
+      target
+  }) => {
+    functionesTabla.filtrar(target.value)
+  }));
+</script>
+{% endblock %}
