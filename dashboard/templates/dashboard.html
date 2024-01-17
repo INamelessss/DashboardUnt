@@ -14,36 +14,26 @@
   </div>
 </div>
 <div style="display: flex; flex-direction: column; border: 1px solid black; border-radius: 7px;">
+  
+  {% for facultad in facultades %}
   <div style="display: flex; flex-direction: column">
     <div style="display: flex;background-color: #454556; color: white; padding: .6em 1.2em; border-bottom: 2px solid #242424; box-shadow: 0px 3px 11px #565667;">
-      <h2 style="flex-grow: 1;margin: 0;">Factultad de Ingenieria</h2>
+      <h2 style="flex-grow: 1;margin: 0;">{{facultad.text}}</h2>
       <label  class="toggle">
-        
         <input hidden type="checkbox" class="" name="desplegable" id="">
       </label>
     </div>
     <div class="cards-grid" style="padding: .7em 1.2em; overflow: hidden;">
-      <a href="sistemas/docentes" class="contenedor-escuela">
-        <h2 class="title">
-          Ingenieria de Sistemas
-        </h2>
-      </a>
-      <a class="contenedor-escuela">
-        <h2 class="title">
-          Ingenieria de minas
-        </h2>
-      </a>
-      <a class="contenedor-escuela">
-        <h2 class="title">
-          Ingenieria ambiental
-        </h2>
-      </a>
-      <a class="contenedor-escuela">
-        <h2 class="title">
-          Ingenieria civil
-        </h2>
-      </a>
+      {% for escuela in facultad.escuelas %}
+      
+        <a href="{{escuela.name}}/docentes" class="contenedor-escuela">
+          <h2 class="title">
+            {{escuela.text}}
+          </h2>
+        </a>
+      {% endfor %}
     </div>
   </div>
+  {% endfor %}
 </div>
 {% endblock %}

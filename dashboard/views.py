@@ -14,6 +14,8 @@ import json
 from collections import Counter
 from django.http import JsonResponse
 
+facultades = [{"text":'Factultad de ingenieria', "name":'ingenieria',"escuelas":[{"text":'Ingenieria de sistemas',"name":'sistemas'},{"text":'Ingenieria de minas',"name":'minas'},{"text":'Ingenieria de ambiental',"name":'ambiental'},{"text":'Ingenieria civil',"name":'civil'},]}] 
+
 
 def genRandomColor():
     randomHue = randint(0, 359)
@@ -220,102 +222,10 @@ def malla(request, escuela):
     }
     return render(request, 'cursos/malla.html', context)
 
-def dashboard(request):
-    age_range = request.GET.get('age')
-    modality = request.GET.get('modality')
-    category = request.GET.get('category')
-    grade = request.GET.get('grade')
-    school = request.GET.get('school')
-
-    current_year = date.today().year
-
-    age_mapping = {
-        '21-30 years': '21-30',
-        '31-40 years': '31-40',
-        '41-50 years': '41-50',
-        '51-60 years': '51-60',
-        '61+ years': '61+',
-    }
-
-    teachers = Teacher.objects.all()
-
-    teachers = Teacher.objects.annotate(
-        work=current_year - ExtractYear('income'),
-        age=current_year - ExtractYear('birth'),
-    )
-    teachers = teachers.exclude(birth__isnull=True)
-
-    if age_range:
-        if '-' in age_range:
-            start_age, end_age = age_range.split('-')
-            start_age = start_age.replace('years', '').strip()
-            end_age = end_age.replace('years', '').strip()
-        else:
-            start_age = '61'
-            end_age = '120'
-
-        if start_age and end_age:
-            current_year = date.today().year
-            start_birth_year = current_year - int(end_age) - 1
-            end_birth_year = current_year - int(start_age)
-
-            teachers = teachers.filter(birth__year__range=(start_birth_year, end_birth_year))
-
-    if modality:
-        teachers = teachers.filter(type=modality)
-    if category:
-        teachers = teachers.filter(category=category)
-    if grade:
-        teachers = teachers.filter(grade=grade)
-    if school:
-        teachers = teachers.filter(school=school)
-
-    # Calculate the degree distribution
-    degree_distribution_data = teachers.values('status').annotate(count=Count('status')).order_by('-count')
-    degree_distribution = [{'label': data['status'], 'data': data['count']} for data in degree_distribution_data]
-
-    # Calculate the contract distribution
-    contract_distribution_data = teachers.values('type').annotate(count=Count('type')).order_by('-count')
-    contract_distribution = [{'label': data['type'], 'data': data['count']} for data in contract_distribution_data]
-
-    # Calculate the number of teachers per school
-    teachers_per_school_data = teachers.values('school').annotate(count=Count('school')).order_by('-count')
-
-    # Calculate the average age of teachers
-    average_age = teachers.aggregate(avg_age=Avg('age'))['avg_age']
-
-    # Filtra los profesores cuya edad es mayor o igual a 70
-    teachers_70_or_older = teachers.filter(age__gte=70)
-
-    # Obtiene la cantidad de profesores cuya edad es mayor o igual a 70
-    count_teachers_70_or_older = teachers_70_or_older.count()
-
-
-    teachers_with_research = Teacher.objects.filter(research__isnull=False).values('school').annotate(count=Count('school'))
-    teachers_without_research = Teacher.objects.filter(research__isnull=True).values('school').annotate(count=Count('school'))
-
-    teachers_per_school_data = []
-    for with_research in teachers_with_research:
-        school = with_research['school']
-        with_count = with_research['count']
-        without_count = next((item['count'] for item in teachers_without_research if item['school'] == school), 0)
-        teachers_per_school_data.append({
-            'school': school,
-            'with_research': with_count,
-            'without_research': without_count,
-        })
-
-    # Calcular el porcentaje
-    percentage_teachers_with_research = (Teacher.objects.filter(research__isnull=False).distinct().count() / Teacher.objects.count()) * 100
-
+def dashboard(request):  
+    
     context = {
-        'teachers': teachers,
-        'degree_data': degree_distribution,
-        'contract_data': contract_distribution,
-        'teachers_per_school_data': teachers_per_school_data,
-        'average_age': average_age,
-        'count_teachers_70_or_older': count_teachers_70_or_older,
-        'percentage_teachers_with_research': percentage_teachers_with_research,
+        'facultades':facultades,
     }
 
     return render(request, 'dashboard.html', context)
@@ -512,6 +422,7 @@ def research_analysis(request, escuela):
     total_projects = Research.objects.count()
 
     researchs = Research.objects.all()
+    # researchs.filter(school=escuela)
     research_line_counts = Counter(researchs.values_list('research_line', flat=True))
     research_line_counts_list = list(research_line_counts.items())
 
@@ -701,8 +612,8 @@ def activos(request, escuela):
     datos_barras_json = json.dumps(list(datos_barras), default=str)
     tabla_resumen_json = json.dumps(list(tabla_resumen), default=str)
 
-    print(datos_barras_json)
-    print(datos_grafico_barras_json)
+    print('datos barras', datos_pastel)
+    
     return render(request, 'infraestructura.html', {
         'datos_pastel_json': datos_pastel_json,
         'datos_barras_json': datos_barras_json,
@@ -716,6 +627,21 @@ def activos(request, escuela):
         'estados': estados,
         'escuela':escuela,
     })
+
+def employees(request, escuela):
+    employees = [{
+        "school": 'sistemas',
+        "surname_and_names": 'BRIONES HERAS DORIS ELIZABETH',
+        "email": 'dbriones@unitru.edu.pe',
+        "phone_number": '970025212'
+    }]
+
+    context = {
+        'employees': employees,
+        'escuela':escuela,
+    }
+
+    return render(request, 'personal.html', context)
 
 def api_course_students(request,curso):
     course_obj = Course.objects.get(id=curso)

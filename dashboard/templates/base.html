@@ -302,12 +302,18 @@
           <a class="nav-link" href="{% url 'research' escuela %}">Investigaciones</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link">Personal administrativo</a>
+          <a class="nav-link" href="{% url 'personal' escuela %}">Personal administrativo</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'activos' escuela %}">Infraestructura</a>
         </li>
       </ul>
+    </div>
+    <div>
+      <h4 class="text-white m-0">
+        {% block escuela %}
+        {% endblock %}
+      </h4>
     </div>
   </nav>
 

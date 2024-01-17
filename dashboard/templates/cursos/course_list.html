@@ -1,8 +1,10 @@
 {% extends 'base.html' %}
-
+{% block escuela %}
+  {{escuela}}
+{% endblock %}
 {% block content %}
     <div class="container">
-        <h1 class="mb-4">Currículas de las Escuelas de {{escuela}}</h1>
+        <h1 class="mb-4">Cursos de las Escuelas de {{escuela}}</h1>
         <form method="GET" action="{% url 'course_list' escuela %}">
             <div class="row mb-3">
                 <div class="col-md-2">
