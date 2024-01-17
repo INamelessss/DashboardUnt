@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class="container">
-        <h1 class="mb-4">Currículas de las Escuelas de {{escuela}}</h1>
+        <h1 class="mb-4">Cursos de las Escuelas de {{escuela}}</h1>
         <form method="GET" action="{% url 'course_list' escuela %}">
             <div class="row mb-3">
                 <div class="col-md-2">
@@ -23,6 +23,16 @@
                         </select>
                     </div>
                 </div>
+                <div class="col-md-2">
+                  <div class="form-group">
+                      <label for="course_cycle">Periodo:</label>
+                      <select class="form-select" name="course_period" id="course_period">
+                      {% for period_option in period_options %}
+                        <option {% if request.GET.category == period_option %} selected {% endif %} value="{{period_option}}">{{period_option}}</option>
+                      {% endfor %}
+                      </select>
+                  </div>
+              </div>
                 <div class="col-md-2 d-grid align-content-end">
                     <button type="submit" class="btn btn-primary" style="align-self: baseline;">Filtrar</button>
                 </div>

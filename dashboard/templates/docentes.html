@@ -5,18 +5,16 @@
   <form method="GET" action="">
     <div class="row mt-3 mb-3">
         <div class="col-md-2">
-            <div class="form-group">
-                <label>Edad:</label>
-                <select class="form-control" name="age" id="age">
+          <div class="form-group">
+              <label>Condición:</label>
+              <select class="form-control" name="status" id="status">
                   <option value="">Todos</option>
-                  <option value="21-30 years">21-30 años</option>
-                  <option value="31-40 years">31-40 años</option>
-                  <option value="41-50 years">41-50 años</option>
-                  <option value="51-60 years">51-60 años</option>
-                  <option value="61+ years">61+ años</option>
+                  {% for condicion_option in condicion_options %}
+                  <option {% if request.GET.category == condicion_option %} selected {% endif %} value="{{condicion_option}}">{{condicion_option}}</option>
+                  {% endfor %}
               </select>
-            </div>
-        </div>
+          </div>
+      </div>
         <div class="col-md-2">
             <div class="form-group">
                 <label>Modalidad: </label>
@@ -55,26 +53,39 @@
         </div>
         <div class="col-md-2">
           <div class="form-group">
-              <label>Sede:</label>
-              
-              <select class="form-control" name="sede" id="sede">
+              <label>Edad:</label>
+              <select class="form-control" name="age" id="age">
                 <option value="">Todos</option>
-                {% for sede in all_sedes %}
-                    <option value="{{ sede }}" {% if selected_sede == sede %}selected{% endif %}>{{ sede }}</option>
-                {% endfor %}
+                <option value="21-30 years">21-30 años</option>
+                <option value="31-40 years">31-40 años</option>
+                <option value="41-50 years">41-50 años</option>
+                <option value="51-60 years">51-60 años</option>
+                <option value="61+ years">61+ años</option>
+            </select>
+          </div>
+      </div>
+        <div class="col-md-2">
+          <div class="form-group">
+              <label>Sede:</label>
+              <select class="form-control" name="sede" id="sede">
+                  <option value="">Todos</option>
+                  {% for sede_option in sede_options %}
+                  <option {% if request.GET.category == sede_option %} selected {% endif %} value="{{sede_option}}">{{sede_option}}</option>
+                  {% endfor %}
               </select>
           </div>
       </div>
-        <div class="col-md-2 d-grid align-content-end">
-            <button type="submit" class="btn btn-primary">Filtrar</button>
-        </div>
+      </div>
     </div>
-  </form>
-  <div class="row mb-3">
-    <div class="col-12">
-      <input id="txtBusqueda" placeholder="Buscar por nombre y apellidos" type="text" class="form-control">
+    <div class="row mb-3">
+      <div class="col-12">
+        <input id="txtBusqueda" placeholder="Buscar por nombre y apellidos" type="text" class="form-control">
+      </div>
     </div>
+    <div class="col-md-2 d-grid align-content-end">
+      <button type="submit" class="btn btn-primary">Filtrar</button>
   </div>
+  </form>
 </div>
 
 <div class="container">
@@ -89,6 +100,7 @@
                   <th class="text-center">Categoria</th>
                   <th class="text-center">Grado</th>
                   <th class="text-center">Edad</th>
+                  <th class="text-center">Sede</th>
                   <th class="text-center">Años<br>de trabajo</th>
               </tr>
           </thead>
@@ -102,6 +114,7 @@
                   <td class="text-center">{{ teacher.category }}</td>
                   <td class="text-center">{{ teacher.grade }}</td>
                   <td class="text-center">{{ teacher.age }}</td>
+                  <td class="text-center">{{ teacher.sede.name }}</td>
                   <td class="text-center">{{ teacher.work }}</td>
               </tr>
               {% endfor %}

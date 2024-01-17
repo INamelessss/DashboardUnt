@@ -69,6 +69,7 @@ def course_list(request, escuela):
     # Get query parameters from request URL
     course_name = request.GET.get('course_name')
     course_cycle = request.GET.get('course_cycle')
+    course_period = request.GET.get('course_period')
 
     # Filter courses based on query parameters
     courses = Course.objects.all()
@@ -77,7 +78,10 @@ def course_list(request, escuela):
         courses = courses.filter(name__icontains=course_name)
     if course_cycle:
         courses = courses.filter(cycle=course_cycle)
+    if course_period:
+        courses = courses.filter(period=course_period)
 
+    period_options = courses.values_list('period__period',flat=True).distinct().order_by('period')
 
     enrollments = Enrollment.objects.select_related('course', 'student')
     student_lowest_cycles = {}
@@ -173,6 +177,7 @@ def course_list(request, escuela):
     courses = sorted(courses,key=sort_by_roman_numeral)
     context = {
         'escuela':escuela,
+        'period_options':period_options,
         'students_per_cycle_chart':students_per_cycle_chart,
         'courses': courses,
         'total_credits': total_credits['total_credits'],
@@ -326,6 +331,8 @@ def docentes(request, escuela):
     category = request.GET.get('category')
     grade = request.GET.get('grade')
     school = request.GET.get('school')
+    modalidad = request.GET.get('type')
+    condicion = request.GET.get('status')
     selected_sede = request.GET.get('sede')
 
     current_year = date.today().year
@@ -349,7 +356,8 @@ def docentes(request, escuela):
     modalidad_options = teachers.values_list('type',flat=True).distinct().order_by('type')
     categoria_options = teachers.values_list('category',flat=True).distinct().order_by('category')
     grado_options = teachers.values_list('grade',flat=True).distinct().order_by('grade')
-    sede_options = teachers.values_list('sede',flat=True).distinct().order_by('grade')
+    condicion_options = teachers.values_list('status',flat=True).distinct().order_by('status')
+    sede_options = teachers.values_list('sede__name',flat=True).distinct().order_by('sede')
 
     if age_range:
         if '-' in age_range:
@@ -375,10 +383,10 @@ def docentes(request, escuela):
         teachers = teachers.filter(category=category)
     if grade:
         teachers = teachers.filter(grade=grade)
+    if condicion:
+        teachers = teachers.filter(status=condicion)
     if selected_sede:
-        teachers_ids = CourseAssignment.objects.filter(sede__name=selected_sede).values_list('teacher', flat=True)
-        teachers = Teacher.objects.filter(id__in=teachers_ids)
-        teachers = teachers.annotate(age=current_year - ExtractYear('birth'))
+        teachers = teachers.filter(sede__name=selected_sede)
         
     # Calculate the degree distribution
     degree_distribution_data = teachers.values('status').annotate(count=Count('status')).order_by('-count')
@@ -401,10 +409,10 @@ def docentes(request, escuela):
     count_teachers_70_or_older = teachers_70_or_older.count()
 
 
-    teachers_with_research = Teacher.objects.filter(research__isnull=False).values('school').annotate(count=Count('school'))
-    teachers_without_research = Teacher.objects.filter(research__isnull=True).values('school').annotate(count=Count('school'))
+    teachers_with_research = teachers.filter(research__isnull=False).values('school').annotate(count=Count('school'))
+    teachers_without_research = teachers.filter(research__isnull=True).values('school').annotate(count=Count('school'))
 
-    teachers_per_sede_data = CourseAssignment.objects.values('sede__name').annotate(count=Count('teacher', distinct=True)).order_by('-count')
+    teachers_per_sede_data = teachers.values('sede__name').annotate(count=Count('id')).order_by('-count')
     teachers_per_sede = [{'sede': data['sede__name'], 'count': data['count']} for data in teachers_per_sede_data]
     sede_names = [data['sede'] for data in teachers_per_sede]
     sede_counts = [data['count'] for data in teachers_per_sede]
@@ -423,7 +431,10 @@ def docentes(request, escuela):
         })
 
     # Calcular el porcentaje
-    percentage_teachers_with_research = (Teacher.objects.filter(research__isnull=False).distinct().count() / Teacher.objects.count()) * 100
+    if (teachers.count() != 0):
+        percentage_teachers_with_research = (teachers.filter(research__isnull=False).distinct().count() / teachers.count()) * 100
+    else:
+        percentage_teachers_with_research = 0
 
     context = {
         'modalidad_options': modalidad_options,
@@ -441,6 +452,8 @@ def docentes(request, escuela):
         'sede_count':sede_counts,
         'all_sedes': all_sedes,
         'selected_sede':selected_sede,
+        'condicion_options':condicion_options,
+        'sede_options':sede_options,
         'percentage_teachers_with_research': percentage_teachers_with_research,
     }
 

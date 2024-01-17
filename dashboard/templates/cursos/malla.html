@@ -44,7 +44,10 @@
                 </div>
             </div>
         </form>
-
+        {% load static %}
+        <div class="embed-responsive embed-responsive-16by9">
+            <iframe class="embed-responsive-item" src="{% static 'pdf/malla_sistemas.pdf' %}" style="width:1200px; height:800px;"></iframe>
+        </div>
         <div class="table-responsive rounded">
             <table class="table table-striped">
                 <thead class="bg-primary text-white">
