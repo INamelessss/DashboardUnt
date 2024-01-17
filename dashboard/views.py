@@ -349,6 +349,7 @@ def docentes(request, escuela):
     modalidad_options = teachers.values_list('type',flat=True).distinct().order_by('type')
     categoria_options = teachers.values_list('category',flat=True).distinct().order_by('category')
     grado_options = teachers.values_list('grade',flat=True).distinct().order_by('grade')
+    sede_options = teachers.values_list('sede',flat=True).distinct().order_by('grade')
 
     if age_range:
         if '-' in age_range:

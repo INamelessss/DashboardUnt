@@ -42,6 +42,8 @@ class Teacher(models.Model):
     grade = models.CharField(max_length=100)
     birth = models.DateField()
     income = models.DateField()
+    sede = models.ForeignKey(Sede, on_delete=models.CASCADE, default=1)
+    period = models.ForeignKey(Period, on_delete=models.CASCADE, default=1)
 
 class CourseAssignment(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
