@@ -241,7 +241,7 @@ def dashboard(request):
 def docentes(request, escuela):
     age_range = request.GET.get('age')
     modality = request.GET.get('modality')
-    category_filter = request.GET.get('category')
+    category = request.GET.get('category')
     grade = request.GET.get('grade')
     school = request.GET.get('school')
     modalidad = request.GET.get('type')
@@ -253,27 +253,30 @@ def docentes(request, escuela):
     teachers_grouped = Teacher.objects.values('category', 'type','status').annotate(total=Count('id')).order_by('category', 'type','status').filter(school=escuela)
 
     conditions = {}
+    categories = {}
 
+    # Llenado del diccionario de condiciones
     for entry in teachers_grouped:
         category = entry['category']
         if category not in conditions:
-            conditions[category] = {'NOMBRADO': 0, 'CONTRATADO': 0, 'NO CONTRATADO': 0, 'TOTAL': 0}
-        conditions[category][entry['status']] += entry['total']
+            conditions[category] = {'NOMBRADO': 0, 'CONTRATADO': 0, 'NO_CONTRATADO': 0, 'TOTAL': 0}
+        status_key = 'NO_CONTRATADO' if entry['status'] == 'NO NOMBRADO' else entry['status']
+        conditions[category][status_key] += entry['total']
         conditions[category]['TOTAL'] += entry['total']
 
+    # Calculo de totales y porcentajes para condiciones
     total_nombrado = sum(cond['NOMBRADO'] for cond in conditions.values())
     total_contratado = sum(cond['CONTRATADO'] for cond in conditions.values())
-    total_no_contratado = sum(cond['NO CONTRATADO'] for cond in conditions.values())
+    total_no_contratado = sum(cond['NO_CONTRATADO'] for cond in conditions.values())
     total_general_conditions = total_nombrado + total_contratado + total_no_contratado
 
     if total_general_conditions > 0:
         for category, values in conditions.items():
             values['NOMBRADO_percent'] = (values['NOMBRADO'] / total_general_conditions) * 100
             values['CONTRATADO_percent'] = (values['CONTRATADO'] / total_general_conditions) * 100
-            values['NO_NOMBRADO_percent'] = (values['NO CONTRATADO'] / total_general_conditions) * 100
+            values['NO_CONTRATADO_percent'] = (values['NO_CONTRATADO'] / total_general_conditions) * 100
 
-    categories = {}
-
+    # Llenado del diccionario de categorías
     for entry in teachers_grouped:
         category = entry['category']
         if category not in categories:
@@ -281,26 +284,27 @@ def docentes(request, escuela):
         categories[category][entry['type']] += entry['total']
         categories[category]['TOTAL'] += entry['total']
 
+    # Calculo de totales y porcentajes para modalidades
     total_tp = sum(cat['TP'] for cat in categories.values())
     total_tc = sum(cat['TC'] for cat in categories.values())
     total_de = sum(cat['DE'] for cat in categories.values())
     total_general = total_tp + total_tc + total_de
 
-    total_nombrado_percent = (total_nombrado / total_general_conditions) * 100 if total_general_conditions > 0 else 0
-    total_contratado_percent = (total_contratado / total_general_conditions) * 100 if total_general_conditions > 0 else 0
-    total_no_contratado_percent = (total_no_contratado / total_general_conditions) * 100 if total_general_conditions > 0 else 0
-    total_general_conditions_percent = 100  # El total siempre es el 100%
+    for category, values in categories.items():
+        values['TP_percent'] = (values['TP'] / total_general) * 100 if total_general > 0 else 0
+        values['TC_percent'] = (values['TC'] / total_general) * 100 if total_general > 0 else 0
+        values['DE_percent'] = (values['DE'] / total_general) * 100 if total_general > 0 else 0
+        # El siguiente porcentaje es para la segunda tabla, que muestra los porcentajes del total de profesores
+        values['TOTAL_percent'] = (values['TOTAL'] / total_general_conditions) * 100 if total_general_conditions > 0 else 0
 
+    # Preparación de los datos para la tabla
     table_data = []
     for category in conditions:
-        total_cond = conditions[category]['TOTAL']
-        total_mod = categories.get(category, {}).get('TOTAL', 0)
-
         category_data = {
             'category': category,
             'NOMBRADO': conditions[category].get('NOMBRADO', 0),
             'CONTRATADO': conditions[category].get('CONTRATADO', 0),
-            'NO_CONTRATADO': conditions[category].get('NO NOMBRADO', 0),
+            'NO_CONTRATADO': conditions[category].get('NO_CONTRATADO', 0),
             'NOMBRADO_percent': conditions[category].get('NOMBRADO_percent', 0),
             'CONTRATADO_percent': conditions[category].get('CONTRATADO_percent', 0),
             'NO_CONTRATADO_percent': conditions[category].get('NO_CONTRATADO_percent', 0),
@@ -310,26 +314,10 @@ def docentes(request, escuela):
             'TP_percent': categories.get(category, {}).get('TP_percent', 0),
             'TC_percent': categories.get(category, {}).get('TC_percent', 0),
             'DE_percent': categories.get(category, {}).get('DE_percent', 0),
-            'TOTAL_cond': total_cond,
-            'TOTAL_mod': total_mod,
+            'TOTAL': categories.get(category, {}).get('TOTAL', 0),
             'TOTAL_percent': categories.get(category, {}).get('TOTAL_percent', 0),
         }
         table_data.append(category_data)
-
-    for category, values in categories.items():
-        values['TP_percent'] = (values['TP'] / total_general) * 100
-        values['TC_percent'] = (values['TC'] / total_general) * 100
-        values['DE_percent'] = (values['DE'] / total_general) * 100
-        values['TOTAL_percent'] = values['TOTAL'] / total_general * 100 if total_general > 0 else 0
-
-    for data in table_data:
-        data['TOTAL_cond_percent'] = (data['TOTAL_cond'] / total_general_conditions) * 100 if total_general_conditions > 0 else 0
-        data['TOTAL_mod_percent'] = (data['TOTAL_mod'] / total_general) * 100 if total_general > 0 else 0
-
-
-    total_tp_percent = (total_tp / total_general) * 100 if total_general > 0 else 0
-    total_tc_percent = (total_tc / total_general) * 100 if total_general > 0 else 0
-    total_de_percent = (total_de / total_general) * 100 if total_general > 0 else 0
 
     age_mapping = {
         '21-30 years': '21-30',
@@ -373,15 +361,15 @@ def docentes(request, escuela):
         teachers = teachers.filter(school=escuela)
     if modality:
         teachers = teachers.filter(type=modality)
-    if category_filter:
-        teachers = teachers.filter(category=category_filter)
+    if category:
+        teachers = teachers.filter(category=category)
     if grade:
         teachers = teachers.filter(grade=grade)
     if condicion:
         teachers = teachers.filter(status=condicion)
     if selected_sede:
         teachers = teachers.filter(sede__name=selected_sede)
-
+        
     # Calculate the degree distribution
     degree_distribution_data = teachers.values('status').annotate(count=Count('status')).order_by('-count')
     degree_distribution = [{'label': data['status'], 'data': data['count']} for data in degree_distribution_data]
@@ -456,18 +444,10 @@ def docentes(request, escuela):
         'total_general':total_general,
         'total_nombrado':total_nombrado,
         'total_contratado':total_contratado,
-        'total_no_contratado':total_no_contratado,
         'total_general_conditions':total_general_conditions,
         'conditions':conditions,
         'table_data':table_data,
-        'total_nombrado_percent':total_nombrado_percent,
-        'total_no_contratado_percent':total_no_contratado_percent,
-        'total_contratado_percent':total_contratado_percent,
-        'total_general_conditions_percent':total_general_conditions_percent,
-        'total_tp_percent':total_tp_percent,
-        'total_tc_percent':total_tc_percent,
-        'total_de_percent':total_de_percent
-
+        'total_no_contratado': total_no_contratado,
     }
 
     return render(request, 'docentes.html', context)
@@ -731,48 +711,6 @@ def activos(request, escuela):
 
     print('datos barras', datos_pastel)
     
-    # Obtener el conteo total de activos por descripción y estado
-    conteo_por_estado = Activo.objects.values('descripcion', 'estado').annotate(cantidad=Count('id')).order_by('descripcion', 'estado')
-
-    # Calcular los totales por descripción
-    totales_por_descripcion = Activo.objects.values('descripcion').annotate(total=Count('id')).order_by('descripcion')
-
-    # Crear diccionario para los totales de cada estado y la descripción
-    tabla_resumen2 = {}
-    for descripcion in totales_por_descripcion:
-        tabla_resumen2[descripcion['descripcion']] = {
-            'OPERATIVO': 0,
-            'MALOGRADO': 0,
-            'BAJA': 0,
-            'total': descripcion['total'],
-        }
-    
-    # Poblar el diccionario con los datos
-    for estado in conteo_por_estado:
-        equipo = estado['descripcion']
-        tabla_resumen2[equipo][estado['estado']] = estado['cantidad']
-
-    # Calcular los totales generales
-    total_general = sum(descripcion['total'] for descripcion in totales_por_descripcion)
-    totales_por_estado = {
-        'OPERATIVO': sum(item['OPERATIVO'] for item in tabla_resumen2.values()),
-        'MALOGRADO': sum(item['MALOGRADO'] for item in tabla_resumen2.values()),
-        'BAJA': sum(item['BAJA'] for item in tabla_resumen2.values()),
-        'total': total_general,
-    }
-
-    # Calcular los porcentajes
-    for equipo, totales in tabla_resumen2.items():
-        tabla_resumen2[equipo]['operativo_percent'] = (totales['OPERATIVO'] / total_general) * 100
-        tabla_resumen2[equipo]['malogrado_percent'] = (totales['MALOGRADO'] / total_general) * 100
-        tabla_resumen2[equipo]['baja_percent'] = (totales['BAJA'] / total_general) * 100
-        tabla_resumen2[equipo]['total_percent'] = (totales['total'] / total_general) * 100
-    
-    totales_por_estado['operativo_percent'] = (totales_por_estado['OPERATIVO'] / total_general) * 100
-    totales_por_estado['malogrado_percent'] = (totales_por_estado['MALOGRADO'] / total_general) * 100
-    totales_por_estado['baja_percent'] = (totales_por_estado['BAJA'] / total_general) * 100
-    totales_por_estado['total_percent'] = 100  # El total general siempre será el 100%
-
     return render(request, 'infraestructura.html', {
         'datos_pastel_json': datos_pastel_json,
         'datos_barras_json': datos_barras_json,
@@ -785,8 +723,6 @@ def activos(request, escuela):
         'descripciones': descripciones,
         'estados': estados,
         'escuela':escuela,
-        'tabla_resumen2': tabla_resumen2,
-        'totales_por_estado': totales_por_estado,
     })
 
 def employees(request, escuela):
