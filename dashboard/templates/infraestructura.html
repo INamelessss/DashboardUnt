@@ -318,6 +318,55 @@
         <div class="main-content">
 <div class="container">
     <h1 class="mb-4">Estado de los Activos de la escuela de {{escuela}}</h1>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+          <thead class="thead-dark">
+              <tr>
+                  <th rowspan="2" class="text-center align-middle">Equipo</th>
+                  <th colspan="3" class="text-center">Estado en cantidad</th>
+                  <th rowspan="2" class="text-center align-middle">Total</th>
+                  <th colspan="3" class="text-center">Estado en %</th>
+                  <th rowspan="2" class="text-center align-middle">Total</th>
+              </tr>
+              <tr>
+                  <th class="text-center">Operativo</th>
+                  <th class="text-center">Malogrado</th>
+                  <th class="text-center">Baja</th>
+                  <th class="text-center">Operativo</th>
+                  <th class="text-center">Malogrado</th>
+                  <th class="text-center">Baja</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% for equipo, totales in tabla_resumen2.items %}
+              <tr>
+                  <td class="text-center">{{ equipo }}</td>
+                  <td class="text-center">{{ totales.OPERATIVO }}</td>
+                  <td class="text-center">{{ totales.MALOGRADO }}</td>
+                  <td class="text-center">{{ totales.BAJA }}</td>
+                  <td class="text-center">{{ totales.total }}</td>
+                  <td class="text-center">{{ totales.operativo_percent|floatformat:2 }}%</td>
+                  <td class="text-center">{{ totales.malogrado_percent|floatformat:2 }}%</td>
+                  <td class="text-center">{{ totales.baja_percent|floatformat:2 }}%</td>
+                  <td class="text-center">{{ totales.total_percent|floatformat:2 }}%</td>
+              </tr>
+              {% endfor %}
+          </tbody>
+          <tfoot class="thead-dark">
+              <tr>
+                  <th class="text-center">Totales</th>
+                  <th class="text-center">{{ totales_por_estado.OPERATIVO }}</th>
+                  <th class="text-center">{{ totales_por_estado.MALOGRADO }}</th>
+                  <th class="text-center">{{ totales_por_estado.BAJA }}</th>
+                  <th class="text-center">{{ totales_por_estado.total }}</th>
+                  <th class="text-center">{{ totales_por_estado.operativo_percent|floatformat:2 }}%</th>
+                  <th class="text-center">{{ totales_por_estado.malogrado_percent|floatformat:2 }}%</th>
+                  <th class="text-center">{{ totales_por_estado.baja_percent|floatformat:2 }}%</th>
+                  <th class="text-center">{{ totales_por_estado.total_percent|floatformat:2 }}%</th>
+              </tr>
+          </tfoot>
+      </table>
+  </div>
     <!-- Formulario de Filtros -->
     <form method="POST" action="">
         {% csrf_token %}
