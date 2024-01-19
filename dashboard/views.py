@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Course, Teacher, Research, Estudiante, CourseAssignment, Sede, Enrollment, Activo
+from .models import Course, Teacher, Research, Estudiante, CourseAssignment, Sede, Enrollment, Activo, Period, Sede, Factultad, Escuela,CourseSchedule
 from django.db import models
 from django.db.models import Count, Avg, Min, Max
 from django.db.models import Sum
@@ -81,7 +81,7 @@ def course_list(request, escuela):
     if course_cycle:
         courses = courses.filter(cycle=course_cycle)
     if course_period:
-        courses = courses.filter(period=course_period)
+        courses = courses.filter(period__period=course_period)
 
     period_options = courses.values_list('period__period',flat=True).distinct().order_by('period')
 
@@ -229,8 +229,11 @@ def malla(request, escuela):
 
 def dashboard(request):  
     
+    periods = Period.objects.all()
+
     context = {
         'facultades':facultades,
+        'periods':periods
     }
 
     return render(request, 'dashboard.html', context)
@@ -375,9 +378,9 @@ def schedule_view(request, escuela):
         selected_cycle = request.POST['cycle']
         selected_career = request.POST['career']
 
-        courses = Course.objects.filter(headquarters=selected_school, cycle=selected_cycle, career=selected_career)
+        courses = Course.objects.filter(headquarters=selected_school, cycle=selected_cycle, school=selected_career)
 
-        schools = Course.objects.values_list('headquarters', flat=True).distinct()
+        schools = CourseSchedule.objects.values_list('headquarters', flat=True).distinct()
         cycles = Course.objects.values_list('cycle', flat=True).distinct()
         careers = Course.objects.values_list('school', flat=True).distinct()
 
@@ -387,7 +390,7 @@ def schedule_view(request, escuela):
             course.color = getColorFromSet(index, len(courses))
 
     else:
-        schools = Course.objects.values_list('headquarters', flat=True).distinct()
+        schools = CourseSchedule.objects.values_list('headquarters', flat=True).distinct()
         cycles = Course.objects.values_list('cycle', flat=True).distinct()
         careers = Course.objects.values_list('school', flat=True).distinct()
 

@@ -17,10 +17,26 @@ class Course(models.Model):
     hp = models.IntegerField()
     hl = models.IntegerField()
     period = models.ForeignKey(Period, on_delete=models.CASCADE, default=1)
-    headquarters = models.ForeignKey(Sede, on_delete=models.CASCADE, default=1)
-    section = models.CharField(max_length=1)
-    hours = models.IntegerField(default=2)
-    classroom = models.CharField(max_length=20)
+
+class Factultad(models.Model):
+    name = models.CharField(max_length=100)
+
+
+class Escuela(models.Model):
+    name = models.CharField(max_length=100)
+    facultad = models.ForeignKey(Factultad, on_delete=models.CASCADE)
+
+class Malla(models.Model):
+    escuela = models.ForeignKey(Escuela, on_delete=models.CASCADE)
+    documento = models.CharField(max_length=100)
+    año = models.CharField(max_length=4)
+
+class PAdministrativo(models.Model):
+    escuela = models.ForeignKey(Escuela, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    email = models.CharField(max_length=100)
+    phone = models.CharField(max_length=100)
+    position = models.CharField(max_length=100)
 
 class Teacher(models.Model):
     STATUS_CHOICES = (
@@ -67,11 +83,15 @@ class CourseSchedule(models.Model):
         ('Sunday', 'Sunday'),
     ]
 
-    course_model = models.ForeignKey(Course, on_delete=models.CASCADE, default=1)
     day = models.CharField(max_length=20, choices=DAYS_OF_WEEK)
     type = models.CharField(max_length=50)
     start_time = models.TimeField()
     end_time = models.TimeField()
+    course_model = models.ForeignKey(Course, on_delete=models.CASCADE, default=1)
+    classroom = models.CharField(max_length=20)
+    headquarters = models.ForeignKey(Sede, on_delete=models.CASCADE, default=1)
+    hours = models.IntegerField(default=2)
+    section = models.CharField(max_length=1)
 
     def __str__(self):
         return f"{self.course} - {self.day}: {self.start_time} - {self.end_time}"
