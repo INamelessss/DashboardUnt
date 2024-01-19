@@ -39,6 +39,31 @@
     <div class="row mt-5">
         <div class="col-md-12">
             <h2>Detalles de Proyectos de Investigación</h2>
+            <div>
+              <form  method="GET" action="">
+                
+                <div class="row mt-3 mb-3">
+                  <div class="col-xs-12 col-md-8">
+                    <div class="form-group">
+                      <label for="">Investigador principal:</label>
+                      <select class="form-control form-select" name="main_teacher">
+                        <option value="">TODOS</option>
+                        {% for researcher in main_researchers %}
+                        {{research}}
+                        <option value="{{researcher.id}}">{{researcher.surname_and_names}}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-xs-12 col-md-4">
+                    <div class="h-100 form-group d-flex align-items-center">
+                      <button type="submit" class="btn btn-primary">Filtrar</button>
+                    </div>
+                  </div>
+                </div>
+                
+              </form>
+            </div>
             <ul class="list-group" style="font-size: 12px;">
               {% for research in researchs %}
               <li class="list-group-item" style="cursor: default;">

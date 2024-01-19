@@ -5,7 +5,7 @@ from django.db.models import Count, Avg, Min, Max
 from django.db.models import Sum
 from datetime import date, datetime
 from django.db.models import F, Q
-from django.db.models import Count, Case, When, Value, IntegerField
+from django.db.models import Count, Case, When, Value, IntegerField, OuterRef, Subquery
 from django.db.models.functions import ExtractYear
 from random import randint
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -14,7 +14,7 @@ import json
 from collections import Counter
 from django.http import JsonResponse
 
-facultades = [{"text":'Factultad de ingenieria', "name":'ingenieria',"escuelas":[{"text":'Ingenieria de sistemas',"name":'sistemas'},{"text":'Ingenieria de minas',"name":'minas'},{"text":'Ingenieria de ambiental',"name":'ambiental'},{"text":'Ingenieria civil',"name":'civil'},]}] 
+facultades = [{"text":'Factultad de ingenieria', "name":'ingenieria',"escuelas":[{"text":'Ingenieria de sistemas',"name":'sistemas'},{"text":'Ingenieria de minas',"name":'minas'},{"text":'Ingenieria de ambiental',"name":'ambiental'},{"text":'Ingenieria civil',"name":'civil'},]},{"text":'Factultad de pruebas', "name":'ingenieria',"escuelas":[{"text":'Ingenieria de sistemas',"name":'sistemas'},{"text":'Ingenieria de minas',"name":'minas'},{"text":'Ingenieria de ambiental',"name":'ambiental'},{"text":'Ingenieria civil',"name":'civil'},]}] 
 
 
 def genRandomColor():
@@ -407,7 +407,7 @@ def schedule_view(request, escuela):
 def research_analysis(request, escuela):
     # Teachers with research
     teachers_with_research = Teacher.objects.filter(research__isnull=False)
-
+    teachers_with_research = teachers_with_research.filter(school=escuela)
     # Teacher participation per school
     schools = teachers_with_research.values('school').distinct()
     school_counts = []
@@ -435,11 +435,45 @@ def research_analysis(request, escuela):
     # Total number of research projects
     total_projects = Research.objects.count()
 
-    researchs = Research.objects.all()
+
+    # Subquery to get the school of the main researcher
+    main_researcher_school = Teacher.objects.filter(
+        research__id=OuterRef('id')
+    ).order_by('id').values('school')[:1]
+
+    researchs = Research.objects.annotate(
+        main_researcher_school=Subquery(main_researcher_school)
+    ).filter(main_researcher_school=escuela).distinct()
+
+    # researchs = Research.objects.all()
+
+    main_researchers = []
+    for research in researchs:
+      main_teacher = research.teacher.first()
+      main_researchers.append(main_teacher)
+      print('reasearch: ', main_teacher)
+
+    # print(researchs.values())
+            
+    # researchs = researchs.filter(teacher__school=escuela).distinct()
+
     # researchs.filter(school=escuela)
     research_line_counts = Counter(researchs.values_list('research_line', flat=True))
     research_line_counts_list = list(research_line_counts.items())
-
+    
+    teacher  = request.GET.get('main_teacher',None)
+    print('teacher', teacher)
+    if teacher:
+        t_researchs = []
+        
+        for research in researchs:
+          main_teacher = research.teacher.first()
+          print( main_teacher.id, teacher, teacher == main_teacher.id)
+          if str(teacher) == str(main_teacher.id):
+              print('founded')
+              t_researchs.append(research)
+        researchs = t_researchs
+    print(researchs)
     context = {
         'escuela':escuela,
         'school_counts': school_counts,
@@ -449,6 +483,7 @@ def research_analysis(request, escuela):
         'total_projects': total_projects,
         'research_line_counts': research_line_counts_list,
         'researchs': researchs,
+        'main_researchers': main_researchers,
     }
     return render(request, 'research_analysis.html', context)
 
