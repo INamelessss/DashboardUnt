@@ -177,6 +177,9 @@ def course_list(request, escuela):
             course.el_valle_count = normalized_sede_counts[course_id]['EL VALLE']
 
     courses = sorted(courses,key=sort_by_roman_numeral)
+
+    sedes = Sede.objects.all()
+
     context = {
         'escuela':escuela,
         'period_options':period_options,
@@ -185,6 +188,7 @@ def course_list(request, escuela):
         'total_credits': total_credits['total_credits'],
         'total_courses': total_courses,
         'chart_data': chart_data,
+        'sedes':sedes,
         'course_enrollment_counts': course_enrollment_counts,
         'students_per_cycle_chart': students_per_cycle_chart,
     }
@@ -684,6 +688,7 @@ def employees(request, escuela):
     employees = [{
         "school": 'sistemas',
         "surname_and_names": 'BRIONES HERAS DORIS ELIZABETH',
+        "job_title": 'SECRETARIA',
         "email": 'dbriones@unitru.edu.pe',
         "phone_number": '970025212'
     }]
@@ -696,11 +701,23 @@ def employees(request, escuela):
     return render(request, 'personal.html', context)
 
 def api_course_students(request,curso):
-    course_obj = Course.objects.get(id=curso)
-    print('api_course_students: ',curso)
+    
+    sede_students = request.GET.get('sede')
 
+    print(sede_students)
+
+    assignments = CourseAssignment.objects.filter(course=curso)
     
     enrollments = Enrollment.objects.filter(course=curso)
+
+    sede_conversion = {
+      "1":"TRUJILLO",
+      "2":"EL VALLE",
+    }
+
+    if sede_students:
+        print('filtering')
+        enrollments = enrollments.filter(student__sede=sede_conversion[sede_students])
 
     enrolled_students = [
         {
@@ -715,5 +732,18 @@ def api_course_students(request,curso):
         for enrollment in enrollments
     ]
 
-    print('enrollments: ', enrolled_students)
-    return JsonResponse(list(enrolled_students), safe=False)
+    assigned_teachers = [
+        {
+            "teacher": assignment.teacher.surname_and_names,
+            "sede": assignment.sede.name
+        }
+        for assignment in assignments
+    ]
+
+    response = {
+        "teachers": list(assigned_teachers),
+        "students": list(enrolled_students),
+    }
+
+    # print('enrollments: ', enrolled_students)
+    return JsonResponse(dict(response), safe=False)

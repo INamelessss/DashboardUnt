@@ -4,10 +4,31 @@
 {% endblock %}
 {% block content %}
     <div class="container">
-        <h1 class="mb-4">Malla curricular de la Escuela de {{escuela}}</h1>
-        {% load static %}
-        <div class="embed-responsive embed-responsive-16by9">
-            <iframe class="embed-responsive-item" src="{% static 'pdf/malla_sistemas.pdf' %}" style="width:1200px; height:800px;"></iframe>
+      <div class="d-flex w-100">
+        <h1 class="mb-4" style="flex-grow: 1;">Malla curricular de la Escuela de {{escuela}}</h1>
+        <div style="display: grid; place-items: center;">
+          <button class="btn btn-danger py-2" onclick="controlModalMalla(true)">Ver PDF</button>
+        </div>
+      </div>
+        <div id="malla-modal" hidden style="position: fixed; top: 0; bottom: 0; left: 0; right: 0; background-color: #45454570; overflow: hidden; z-index: 99999;">
+          <div style="position: relative; display: grid; place-items: center; height: 100%; left: 0; right: 0;">
+            <div class="card" style="width: 70%;">
+              <div class="card-header" style="display: flex;">
+                <h3 class="m-0" style="flex-grow: 1;">
+                  Malla Curricular
+                </h3>
+                <button class="btn btn-danger" onclick="controlModalMalla(false)">
+                  X
+                </button>
+              </div>
+              <div class="card-body px-3">
+                {% load static %}
+                <div class="embed-responsive embed-responsive-16by9">
+                    <iframe class="embed-responsive-item" src="{% static 'pdf/malla_sistemas.pdf' %}" style="width:1200px; height:800px;"></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <form method="GET" class="mt-3" action="{% url 'course_list' escuela %}">
             <div class="row mb-3">
@@ -136,5 +157,21 @@
             paginable: true,
             paginacion: 10
         });
+
+  function keyboardCloseModalListener({key}){
+    if(key==='Escape'){
+      controlModalMalla(false);
+    }
+  }
+
+  function controlModalMalla(open=true){
+    const modal = document.querySelector('#malla-modal');
+    if(open){
+      document.addEventListener('keydown',keyboardCloseModalListener)
+    }else{
+      document.removeEventListener('keydown',keyboardCloseModalListener)
+    }
+    modal.hidden = !open;
+  }
 </script>
 {% endblock %}

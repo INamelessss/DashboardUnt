@@ -85,16 +85,66 @@
         <div class="card" style="width: 70%;">
           <div class="card-header" style="display: flex;">
             <h3 class="m-0" style="flex-grow: 1;">
-              Alumos del curso <span data-template="course-name"></span>
+              Detalle del curso <span style="text-decoration: underline;" data-template="course-name"></span>
             </h3>
             <button class="btn btn-danger" onclick="controlModalStudents(false)">
               X
             </button>
           </div>
-          <div class="card-body">
+          <div class="card-body px-3">
+            <h4>Docentes</h4>
             <div class="row mb-3">
               <div class="col-12">
-                <input id="buscarAlumno" placeholder="Buscar por nombre y apellidos" type="text" class="form-control">
+                <table class="table table-striped">
+                  <thead class="bg-primary text-white">
+                    <tr>
+                      <th>Docente</th>
+                      <th class="text-center">Sede</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tblDocentes">
+                    <tr><td colspan="2"> Cargando... </td></tr> 
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <h4>Alumnos</h4>
+            <div class="row mb-3">
+              <div class="col-xs-12 col-md-8">
+                <div class="row border rounded py-2 px-2 mr-2">
+                  <div class="col-12">
+                    <label for="">Busqueda</label>
+                  </div>
+                  <div class="col-12">
+                    <input id="buscarAlumno" placeholder="Buscar por nombre y apellidos" type="text" class="form-control">
+                  </div>
+                </div>
+              </div>
+              <div class="col-xd-12 col-md-4">
+                <div class="row border rounded py-2 px-3 mr-2">
+                  <div class="col-12">
+                    <label for="">Filtros</label>
+                  </div>
+                  <div class="col-12">
+                    <div class="row">
+                      <div class="col-8">
+                        <div style="display: flex; align-items: center;">
+                          <input hidden id="txtIdCurso" type="text" value="0">
+                          <label style="flex-shrink: 1;">Sede:</label>
+                          <select class="form-control form-select" name="sede" id="cboSede">
+                              <option value="">Todos</option>
+                              {% for sede in sedes %}
+                                <option value="{{sede.id}}">{{sede.name}}</option>
+                              {% endfor %}
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-4 text-right">
+                        <button id="btnFilterAlumnos" class="btn btn-primary btn-block" onclick="filterStudents()">Filtrar</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <table class="table table-striped">
@@ -192,14 +242,27 @@
     fetch(`/api/matriculados/${courseId}`)
       .then(response=>response.json())
       .then(data=>{
+        const txtIdCurso = document.querySelector('#txtIdCurso')
+        txtIdCurso.value = courseId
+
         const tblAlumnos = document.querySelector('#tblAlumnos')
+        const tblDocentes = document.querySelector('#tblDocentes')
         tblAlumnos.innerHTML = '';
-        console.log(tblAlumnos);
-        data.forEach(alumno=>{
+        tblDocentes.innerHTML = '';
+        alumnos = data.students
+        docentes = data.teachers
+        console.log(data);
+        alumnos.forEach(alumno=>{
           row = document.createElement('tr')
           htmlTemplate=`<td class='busqueda'>${alumno.student_code}</td><td class='busqueda'>${alumno.student_names}</td><td class='busqueda'>${alumno.student_sede}</td><td>${alumno.times}</td>`
           row.innerHTML = htmlTemplate
           tblAlumnos.appendChild(row)
+        })
+        docentes.forEach(docente=>{
+          row = document.createElement('tr')
+          htmlTemplate=`<td>${docente.teacher}</td><td>${docente.sede}</td>`
+          row.innerHTML = htmlTemplate
+          tblDocentes.appendChild(row)
         })
         functionesAlumnos.updateDatos();
       })
@@ -208,6 +271,36 @@
   }
 
 
+  function filterStudents(){
+    const idCurso = document.querySelector('#txtIdCurso').value;
+    const idSede = document.querySelector('#cboSede').value;
+
+    fetch(`/api/matriculados/${idCurso}?sede=${idSede}`)
+      .then(response=>response.json())
+      .then(data=>{
+        const tblAlumnos = document.querySelector('#tblAlumnos')
+        const tblDocentes = document.querySelector('#tblDocentes')
+        tblAlumnos.innerHTML = '';
+        tblDocentes.innerHTML = '';
+        alumnos = data.students
+        docentes = data.teachers
+        console.log(data);
+        alumnos.forEach(alumno=>{
+          row = document.createElement('tr')
+          htmlTemplate=`<td class='busqueda'>${alumno.student_code}</td><td class='busqueda'>${alumno.student_names}</td><td class='busqueda'>${alumno.student_sede}</td><td>${alumno.times}</td>`
+          row.innerHTML = htmlTemplate
+          tblAlumnos.appendChild(row)
+        })
+        docentes.forEach(docente=>{
+          row = document.createElement('tr')
+          htmlTemplate=`<td>${docente.teacher}</td><td>${docente.sede}</td>`
+          row.innerHTML = htmlTemplate
+          tblDocentes.appendChild(row)
+        })
+        functionesAlumnos.updateDatos();
+      })
+      .catch(error=>console.error(error));
+  }
 
   function keyboardCloseModalListener({key}){
     if(key==='Escape'){
