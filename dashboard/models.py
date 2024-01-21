@@ -92,6 +92,7 @@ class CourseSchedule(models.Model):
     headquarters = models.ForeignKey(Sede, on_delete=models.CASCADE, default=1)
     hours = models.IntegerField(default=2)
     section = models.CharField(max_length=1)
+    period = models.ForeignKey(Period, on_delete=models.CASCADE, default=1)
 
     def __str__(self):
         return f"{self.course} - {self.day}: {self.start_time} - {self.end_time}"
