@@ -19,17 +19,6 @@
                     </select>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="career">Escuela:</label>
-                    <select name="career" id="career" class="form-control">
-                        <option value="">Seleccione una opción</option>
-                        {% for career in careers %}
-                        <option value="{{ career }}" class="filter-option">{{ career }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="cycle">Ciclo:</label>
@@ -74,9 +63,9 @@
                                                     {% with schedule.end_time|time:"H:i" as end_hour %}
                                                         {% if i >= start_hour and i < end_hour %}
                                                             <div class="course-box" style="background-color: {{ course.color }};">
-                                                                <span class="course-title">{{ course.course }}</span>
+                                                                <span class="course-title">{{ course.name }}</span>
                                                                 <div class="course-details">
-                                                                    Sección:{{ course.section }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Aula: {{ course.classroom }}
+                                                                    Sección: {{ schedule.section }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Aula: {{ schedule.classroom }}
                                                                 </div>
                                                             </div>
                                                         {% endif %}
@@ -104,38 +93,49 @@
                     <th>Sección</th>
                     <th>Carrera</th>
                     <th>Curso</th>
-                    <th>Horas</th>
-                    <th>Días</th>
-                    <th>Aula</th>
+                    <th>Horarios</th>
+                    <th>Aula/Laboratorio</th>
+                    <th>Docente</th>
                 </tr>
             </thead>
             <tbody>
                 {% for course in courses %}
                 <tr data-course-id="{{ course.id }}">
-                    <td>{{ course.semester }}</td>
-                    <td>{{ course.headquarters }}</td>
+                    <td>{{ course.period.period }}</td>
+                    <td>
+                        {% with course.courseschedule_set.first as course_schedule %}
+                            {% if course_schedule %}
+                                {{ course_schedule.headquarters.name }}
+                            {% endif %}
+                        {% endwith %}
+                    </td>
                     <td>{{ course.cycle }}</td>
-                    <td>{{ course.section }}</td>
-                    <td>{{ course.career }}</td>
-                    <td>{{ course.course }}</td>
-                    <td>{{ course.hours }}</td>
+                    <td>
+                        {% with course.courseschedule_set.first as course_schedule %}
+                            {% if course_schedule %}
+                                {{ course_schedule.section }}
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>{{ course.school }}</td>
+                    <td>{{ course.name }}</td>
                     <td>
                         {% for schedule in course.courseschedule_set.all %}
                             {% with schedule.start_time as start_time %}
                                 {% with schedule.end_time as end_time %}
-                                    {% if schedule.day == 'Monday' %}
+                                    {% if schedule.day == 'MONDAY' %}
                                     Lunes:
-                                    {% elif schedule.day == 'Tuesday' %}
+                                    {% elif schedule.day == 'TUESDAY' %}
                                     Martes:
-                                    {% elif schedule.day == 'Wednesday' %}
+                                    {% elif schedule.day == 'WEDNESDAY' %}
                                     Miércoles:
-                                    {% elif schedule.day == 'Thursday' %}
+                                    {% elif schedule.day == 'THURSDAY' %}
                                     Jueves:
-                                    {% elif schedule.day == 'Friday' %}
+                                    {% elif schedule.day == 'FRIDAY' %}
                                     Viernes:
-                                    {% elif schedule.day == 'Saturday' %}
+                                    {% elif schedule.day == 'SATURDAY' %}
                                     Sábado:
-                                    {% elif schedule.day == 'Sunday' %}
+                                    {% elif schedule.day == 'SUNDAY' %}
                                     Domingo:
                                     {% endif %}
 
@@ -150,7 +150,14 @@
                             Horario no disponible
                         {% endfor %}
                     </td>
-                    <td>{{ course.classroom }}</td>
+                    <td>
+                        {% with course.courseschedule_set.first as course_schedule %}
+                            {% if course_schedule %}
+                                {{ course_schedule.classroom }}
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td>{{ course.teacher_name }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

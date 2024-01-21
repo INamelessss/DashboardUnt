@@ -260,7 +260,7 @@
         })
         docentes.forEach(docente=>{
           row = document.createElement('tr')
-          htmlTemplate=`<td>${docente.teacher}</td><td>${docente.sede}</td>`
+          htmlTemplate=`<td>${docente.teacher}</td><td class="text-center">${docente.sede}</td>`
           row.innerHTML = htmlTemplate
           tblDocentes.appendChild(row)
         })

@@ -477,31 +477,46 @@ def docentes(request, escuela):
     return render(request, 'docentes.html', context)
 
 def schedule_view(request, escuela):
+
+    course_teacher_map = {}
+
     if request.method == 'POST':
         selected_school = request.POST['school']
         selected_cycle = request.POST['cycle']
-        selected_career = request.POST['career']
 
-        courses = Course.objects.filter(headquarters=selected_school, cycle=selected_cycle, school=selected_career)
+        courses = Course.objects.filter(
+            courseschedule__headquarters__name=selected_school, 
+            cycle=selected_cycle, 
+            school=escuela
+        ).distinct()
 
-        schools = CourseSchedule.objects.values_list('headquarters', flat=True).distinct()
+        schools = CourseSchedule.objects.values_list('headquarters__name', flat=True).distinct()
         cycles = Course.objects.values_list('cycle', flat=True).distinct()
-        careers = Course.objects.values_list('school', flat=True).distinct()
 
-        courses = courses.prefetch_related('courseschedule_set')
+        cycles= sorted(cycles, key=sort_by_roman_numeral2)  
+        courses = courses.prefetch_related('courseschedule_set', 'courseassignment_set')
 
         for index, course in enumerate(courses):
             course.color = getColorFromSet(index, len(courses))
+        
+        for course in courses:
+            course_assignments = course.courseassignment_set.all()
+            if course_assignments:
+                assignment = course_assignments[0]
+                course_teacher_map[course.id] = assignment.teacher
+                course.teacher_name = assignment.teacher.surname_and_names
+            else:
+                course.teacher_name = 'No teacher assigned'
 
     else:
-        schools = CourseSchedule.objects.values_list('headquarters', flat=True).distinct()
+        schools = CourseSchedule.objects.values_list('headquarters__name', flat=True).distinct()
         cycles = Course.objects.values_list('cycle', flat=True).distinct()
-        careers = Course.objects.values_list('school', flat=True).distinct()
+        cycles= sorted(cycles, key=sort_by_roman_numeral2)
 
         courses = []
 
     # Generate hours range
-    days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    days_of_week = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
     hours_range = []
     start_hour = 7
     end_hour = 22
@@ -509,7 +524,7 @@ def schedule_view(request, escuela):
         hours_range.append('{:02d}:00'.format(hour))
 
     return render(request, 'schedule.html', {
-        'escuela':escuela,'courses': courses, 'schools': schools, 'cycles': cycles, 'hours_range': hours_range, 'careers':careers, 'days_of_week':days_of_week})
+        'escuela':escuela,'courses': courses, 'schools': schools, 'cycles': cycles, 'hours_range': hours_range, 'days_of_week':days_of_week, 'course_teacher_map': course_teacher_map})
 
 def research_analysis(request, escuela):
     # Teachers with research
