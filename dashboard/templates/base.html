@@ -355,6 +355,8 @@
 
             const returnObj = {
                 updateDatos: function() {
+                  console.log('repaginando');
+                    nPaginas = 0;
                     datos = Array.from(table.querySelectorAll('tbody tr')).map(e => ({
                         element: e
                     }));
