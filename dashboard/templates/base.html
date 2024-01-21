@@ -132,37 +132,19 @@
       transform: translate(-75%,75%);
     }
 
+    td:has(.schedule-cell){
+      padding: .15em;
+      max-width: 100px;
+    }
+
     .schedule-cell {
       position: relative;
-    }
-
-    .course-box {
-      width: calc(100% - 20px);
-      text-align: left;
-      font-size: 10px;
-      padding: 2px 10px;
-      overflow: hidden;
-      position: absolute;
-
-      background-color: {
-          {
-          course.color
-        }
-      }
-
-      ;
-      border: 1px solid #dee2e6;
-      border-radius: .2rem;
-      box-shadow: 0 0 .5rem rgba(0, 0, 0, .1);
-      transition: transform .2s;
-      left: 0;
-      top: 0;
-      margin: 0;
-    }
-
-    .course-box:hover {
-      z-index: 1;
-      transform: scale(1.05);
+      display: grid;
+      width: 100%;
+      height: 38px;
+      max-width: 100%;
+      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+      grid-template-rows: 1fr;
     }
 
     .course-title {
@@ -181,22 +163,22 @@
       text-overflow: ellipsis;
     }
 
-    .schedule-cell .course-box {
-      width: 100%;
+    .course-box {
+      max-width: 100%;
       height: 100%;
       text-align: left;
       font-size: 10px;
       padding: 2px;
       overflow: hidden;
-      position: absolute;
       background-color: #f8f9fa;
       border: 1px solid #dee2e6;
       border-radius: .2rem;
       box-shadow: 0 0 .5rem rgba(0, 0, 0, .1);
       transition: transform .2s;
+      box-sizing: border-box;
     }
 
-    .schedule-cell .course-box:hover {
+    .course-box:hover {
       z-index: 1;
       transform: scale(1.1);
     }
