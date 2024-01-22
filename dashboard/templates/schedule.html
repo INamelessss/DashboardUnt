@@ -40,13 +40,13 @@
         <table class="table table-bordered">
             <thead class="bg-primary text-white">
                 <tr class="text-center">
-                    <th>Hora/Días</th>
-                    <th>Lunes</th>
-                    <th>Martes</th>
-                    <th>Miércoles</th>
-                    <th>Jueves</th>
-                    <th>Viernes</th>
-                    <th>Sábado</th>
+                    <th style="width: 90px;">Hora/Días</th>
+                    <th style="width: 250px;">Lunes</th>
+                    <th style="width: 250px;">Martes</th>
+                    <th style="width: 250px;">Miércoles</th>
+                    <th style="width: 250px;">Jueves</th>
+                    <th style="width: 250px;">Viernes</th>
+                    <th style="width: 250px;">Sábado</th>
                 </tr>
             </thead>
             <tbody  class="text-center">
@@ -54,7 +54,8 @@
                     <tr>
                         <td>{{ i }}</td>
                         {% for day in days_of_week %}
-                            <td id="{{ day }}-{{ i }}" class="schedule-cell position-relative">
+                            <td id="{{ day }}-{{ i }}" class="position-relative">
+                              <div class="schedule-cell ">
                                 {% for course in courses %}
                                     {% for schedule in course.courseschedule_set.all %}
                                         {% if schedule %}
@@ -62,7 +63,7 @@
                                                 {% with schedule.start_time|time:"H:i" as start_hour %}
                                                     {% with schedule.end_time|time:"H:i" as end_hour %}
                                                         {% if i >= start_hour and i < end_hour %}
-                                                            <div class="course-box" style="background-color: {{ course.color }};">
+                                                            <div class="course-box" title="({{ schedule.section }}) {{ course.name }} | {{ schedule.classroom }}" style="background-color: {{ course.color }};">
                                                                 <span class="course-title">{{ course.name }}</span>
                                                                 <div class="course-details">
                                                                     Sección: {{ schedule.section }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Aula: {{ schedule.classroom }}
@@ -75,6 +76,8 @@
                                         {% endif%}
                                     {% endfor %}
                                 {% endfor %}
+                                
+                              </div>
                             </td>
                         {% endfor %}
                     </tr>
