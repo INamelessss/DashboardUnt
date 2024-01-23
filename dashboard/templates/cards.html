@@ -291,12 +291,21 @@
       transition: ease-out 500ms all;
     }
 
+    #floating-log-out{
+      position: sticky;
+      bottom: 0;
+      left: 100%;
+      padding: 2em;
+      width: fit-content;
+      z-index: 99999999;
+    }
+
   </style>
 </head>
 
-<body>
+<body style="height: 100vh; overflow: hidden; box-sizing: border-box;">
   <!-- Content -->
-  <div class="wrapper container">
+  <div class="py-4 h-100 container">
     <div class="row">
       <!-- Main Content -->
       <main class="col-md-12">
@@ -308,6 +317,15 @@
     </div>
   </div>
 
+  <div id="floating-log-out">
+    {% if user.is_authenticated %}
+      <form action="{% url 'logout' %}" method="post" style="display: inline;">
+          {% csrf_token %}
+          <button class="btn btn-danger" type="submit">Cerrar Sesion
+          </button>
+      </form>
+    {% endif %}
+  </div>
   <!-- Bootstrap Scripts -->
 
 </body>

@@ -1,11 +1,23 @@
 {% extends 'base.html' %}
 {% block escuela %}
-  {{escuela}}
+<div class="dropstart">
+  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+    {{escuela.text}}
+  </button>
+  <ul class="dropdown-menu">
+    {% for item_escuela in escuelas %}
+      <a class="dropdown-item {% if item_escuela.id == escuela.id %}active{% endif %}" 
+        href="/dashboard/{{facultad}}/{{item_escuela.name}}/malla">
+          {{item_escuela.text}}
+      </a>
+    {% endfor %}
+  </ul>
+</div>
 {% endblock %}
 {% block content %}
     <div class="container">
       <div class="d-flex w-100">
-        <h1 class="mb-4" style="flex-grow: 1;">Malla curricular de la Escuela de {{escuela}}</h1>
+        <h1 class="mb-4" style="flex-grow: 1;">Malla curricular de la Escuela de {{escuela.text}}</h1>
         <div style="display: grid; place-items: center;">
           <button class="btn btn-danger py-2" onclick="controlModalMalla(true)">Ver PDF</button>
         </div>
@@ -30,7 +42,7 @@
             </div>
           </div>
         </div>
-        <form method="GET" class="mt-3" action="{% url 'course_list' escuela %}">
+        <form method="GET" class="mt-3" action="{% url 'course_list' facultad escuela.name %}">
             <div class="row mb-3">
                 <div class="col-md-5">
                     <div class="form-group">

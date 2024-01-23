@@ -20,10 +20,12 @@ class Course(models.Model):
 
 class Factultad(models.Model):
     name = models.CharField(max_length=100)
+    text = models.CharField(max_length=30)
 
 
 class Escuela(models.Model):
     name = models.CharField(max_length=100)
+    text = models.CharField(max_length=30)
     facultad = models.ForeignKey(Factultad, on_delete=models.CASCADE)
 
 class Malla(models.Model):

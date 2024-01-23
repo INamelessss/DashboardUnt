@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 
 def login_view(request):
@@ -15,3 +15,9 @@ def login_view(request):
             return JsonResponse({"success": False})
     return render(request, "authentication/login.html")
 
+def logout_view(request):
+    if request.user.is_authenticated:
+        logout(request)
+        return redirect("login")
+    else:
+        return redirect("login")
