@@ -116,7 +116,7 @@
               <select class="form-control" name="status" id="status">
                   <option value="">Todos</option>
                   {% for condicion_option in condicion_options %}
-                  <option {% if request.GET.category == condicion_option %} selected {% endif %} value="{{condicion_option}}">{{condicion_option}}</option>
+                  <option {% if request.GET.status == condicion_option %} selected {% endif %} value="{{condicion_option}}">{{condicion_option}}</option>
                   {% endfor %}
               </select>
           </div>
@@ -152,7 +152,7 @@
                 <select class="form-control" name="grade" id="grade">
                     <option value="">Todos</option>
                     {% for grado_option in grado_options %}
-                    <option {% if request.GET.category == grado_option %} selected {% endif %} value="{{grado_option}}">{{grado_option}}</option>
+                    <option {% if request.GET.grade == grado_option %} selected {% endif %} value="{{grado_option}}">{{grado_option}}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -162,11 +162,11 @@
               <label>Edad:</label>
               <select class="form-control" name="age" id="age">
                 <option value="">Todos</option>
-                <option value="21-30 years">21-30 años</option>
-                <option value="31-40 years">31-40 años</option>
-                <option value="41-50 years">41-50 años</option>
-                <option value="51-60 years">51-60 años</option>
-                <option value="61+ years">61+ años</option>
+                <option {% if request.GET.age == "21-30 years" %} selected {% endif %} value="21-30 years">21-30 años</option>
+                <option {% if request.GET.age == "31-40 years" %} selected {% endif %} value="31-40 years">31-40 años</option>
+                <option {% if request.GET.age == "41-50 years" %} selected {% endif %} value="41-50 years">41-50 años</option>
+                <option {% if request.GET.age == "51-60 years" %} selected {% endif %} value="51-60 years">51-60 años</option>
+                <option {% if request.GET.age == "61+ years"%} selected {% endif %} value="61+ years">61+ años</option>
             </select>
           </div>
       </div>
@@ -176,7 +176,7 @@
               <select class="form-control" name="sede" id="sede">
                   <option value="">Todos</option>
                   {% for sede_option in sede_options %}
-                  <option {% if request.GET.category == sede_option %} selected {% endif %} value="{{sede_option}}">{{sede_option}}</option>
+                  <option {% if request.GET.sede == sede_option %} selected {% endif %} value="{{sede_option}}">{{sede_option}}</option>
                   {% endfor %}
               </select>
           </div>

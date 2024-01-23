@@ -386,24 +386,18 @@ def docentes(request, escuela):
     if selected_sede:
         teachers = teachers.filter(sede__name=selected_sede)
 
-    # Calculate the degree distribution
     degree_distribution_data = teachers.values('status').annotate(count=Count('status')).order_by('-count')
     degree_distribution = [{'label': data['status'], 'data': data['count']} for data in degree_distribution_data]
 
-    # Calculate the contract distribution
     contract_distribution_data = teachers.values('type').annotate(count=Count('type')).order_by('-count')
     contract_distribution = [{'label': data['type'], 'data': data['count']} for data in contract_distribution_data]
 
-    # Calculate the number of teachers per school
     teachers_per_school_data = teachers.values('school').annotate(count=Count('school')).order_by('-count')
 
-    # Calculate the average age of teachers
     average_age = teachers.aggregate(avg_age=Avg('age'))['avg_age']
 
-    # Filtra los profesores cuya edad es mayor o igual a 70
     teachers_70_or_older = teachers.filter(age__gte=70)
 
-    # Obtiene la cantidad de profesores cuya edad es mayor o igual a 70
     count_teachers_70_or_older = teachers_70_or_older.count()
 
 
@@ -515,7 +509,6 @@ def schedule_view(request, escuela):
 
         courses = []
 
-    # Generate hours range
     days_of_week = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
     hours_range = []
     start_hour = 7
@@ -527,38 +520,30 @@ def schedule_view(request, escuela):
         'escuela':escuela,'courses': courses, 'schools': schools, 'cycles': cycles, 'hours_range': hours_range, 'days_of_week':days_of_week, 'course_teacher_map': course_teacher_map})
 
 def research_analysis(request, escuela):
-    # Teachers with research
     teachers_with_research = Teacher.objects.filter(research__isnull=False)
     teachers_with_research = teachers_with_research.filter(school=escuela)
-    # Teacher participation per school
     schools = teachers_with_research.values('school').distinct()
     school_counts = []
     for school in schools:
         count = teachers_with_research.filter(school=school['school']).count()
         school_counts.append((school['school'], count))
 
-    # Amount of investigations divided by type of investigation
     research_types = Research.objects.values('type_of_research').distinct()
     type_counts = []
     for research_type in research_types:
         count = Research.objects.filter(type_of_research=research_type['type_of_research']).count()
         type_counts.append((research_type['type_of_research'], count))
 
-    # Condition of the professors who participated in the research
     conditions = teachers_with_research.values('status').distinct()
     condition_counts = []
     for condition in conditions:
         count = teachers_with_research.filter(status=condition['status']).count()
         condition_counts.append((condition['status'], count))
 
-    # Total budget of all the research
     total_budget = Research.objects.aggregate(total_budget=models.Sum('budget'))
 
-    # Total number of research projects
     total_projects = Research.objects.count()
 
-
-    # Subquery to get the school of the main researcher
     main_researcher_school = Teacher.objects.filter(
         research__id=OuterRef('id')
     ).order_by('id').values('school')[:1]
@@ -715,15 +700,12 @@ def activos(request, escuela):
     estados = Activo.objects.values_list('estado', flat=True).distinct()
     computadores = Activo.objects.values_list('numero_pc', flat=True).distinct()
 
-    # Filtros iniciales (puedes ajustar estos según sea necesario)
     filtro_ambiente = request.POST.get('ambiente', None)
     filtro_descripcion = request.POST.get('descripcion', None)
     filtro_estado = request.POST.get('estado', None)
 
-    # Base QuerySet
     queryset = Activo.objects.all()
 
-    # Aplicar filtros si se proporcionan
     if filtro_ambiente:
         queryset = queryset.filter(ambiente=filtro_ambiente)
     if filtro_descripcion:
@@ -731,10 +713,8 @@ def activos(request, escuela):
     if filtro_estado:
         queryset = queryset.filter(estado=filtro_estado)
 
-    # Datos para el gráfico de pastel (Estado de equipos)
     datos_pastel = queryset.values('estado').annotate(total=Count('estado'))
 
-    # Base QuerySet para los datos de barras
     datos_barras_qs = queryset.values('ambiente', 'descripcion').annotate(total=Count('id')).order_by('ambiente')
 
     computadores = computadores.exclude(numero_pc="-")
@@ -756,12 +736,9 @@ def activos(request, escuela):
         'rgba(255, 206, 86, 0.2)',  # Amarillo
         'rgba(75, 192, 192, 0.2)',  # Verde
         'rgba(153, 102, 255, 0.2)', # Púrpura
-        # ... más colores según sea necesario ...
     ]
-    # Estructurar los datasets para Chart.js
     datasets = []
     for index, descripcion in enumerate(descripciones):
-        # Aquí nos aseguramos de que 'data' es una lista de enteros, que es serializable en JSON
         dataset = {
             'label': descripcion,
             'data': [datos_barras.get(ambiente, {}).get(descripcion, 0) for ambiente in ambientes],
@@ -770,13 +747,12 @@ def activos(request, escuela):
         datasets.append(dataset)
 
     datos_grafico_barras = {
-        'labels': list(ambientes),  # Convertir QuerySet a lista
+        'labels': list(ambientes),
         'datasets': datasets
     }
 
     datos_grafico_barras_json = json.dumps(datos_grafico_barras)
 
-    # Datos para la tabla resumen
     tabla_resumen = queryset.values('ambiente', 'descripcion', 'estado').annotate(total=Count('id'))
 
     datos_pastel_json = json.dumps(list(datos_pastel), default=str)
@@ -784,14 +760,11 @@ def activos(request, escuela):
     tabla_resumen_json = json.dumps(list(tabla_resumen), default=str)
 
     print('datos barras', datos_pastel)
-    
-    # Obtener el conteo total de activos por descripción y estado
+
     conteo_por_estado = Activo.objects.values('descripcion', 'estado').annotate(cantidad=Count('id')).order_by('descripcion', 'estado')
 
-    # Calcular los totales por descripción
     totales_por_descripcion = Activo.objects.values('descripcion').annotate(total=Count('id')).order_by('descripcion')
 
-    # Crear diccionario para los totales de cada estado y la descripción
     tabla_resumen2 = {}
     for descripcion in totales_por_descripcion:
         tabla_resumen2[descripcion['descripcion']] = {
@@ -800,13 +773,11 @@ def activos(request, escuela):
             'BAJA': 0,
             'total': descripcion['total'],
         }
-    
-    # Poblar el diccionario con los datos
+
     for estado in conteo_por_estado:
         equipo = estado['descripcion']
         tabla_resumen2[equipo][estado['estado']] = estado['cantidad']
 
-    # Calcular los totales generales
     total_general = sum(descripcion['total'] for descripcion in totales_por_descripcion)
     totales_por_estado = {
         'OPERATIVO': sum(item['OPERATIVO'] for item in tabla_resumen2.values()),
@@ -815,7 +786,6 @@ def activos(request, escuela):
         'total': total_general,
     }
 
-    # Calcular los porcentajes
     for equipo, totales in tabla_resumen2.items():
         tabla_resumen2[equipo]['operativo_percent'] = (totales['OPERATIVO'] / total_general) * 100
         tabla_resumen2[equipo]['malogrado_percent'] = (totales['MALOGRADO'] / total_general) * 100
@@ -825,7 +795,7 @@ def activos(request, escuela):
     totales_por_estado['operativo_percent'] = (totales_por_estado['OPERATIVO'] / total_general) * 100
     totales_por_estado['malogrado_percent'] = (totales_por_estado['MALOGRADO'] / total_general) * 100
     totales_por_estado['baja_percent'] = (totales_por_estado['BAJA'] / total_general) * 100
-    totales_por_estado['total_percent'] = 100  # El total general siempre será el 100%
+    totales_por_estado['total_percent'] = 100
 
     return render(request, 'infraestructura.html', {
         'datos_pastel_json': datos_pastel_json,
