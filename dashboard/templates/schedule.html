@@ -1,10 +1,22 @@
 {% extends 'base.html' %}
 {% block escuela %}
-  {{escuela}}
+<div class="dropstart">
+  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+    {{escuela.text}}
+  </button>
+  <ul class="dropdown-menu">
+    {% for item_escuela in escuelas %}
+      <a class="dropdown-item {% if item_escuela.id == escuela.id %}active{% endif %}" 
+        href="/dashboard/{{facultad}}/{{item_escuela.name}}/horario">
+          {{item_escuela.text}}
+      </a>
+    {% endfor %}
+  </ul>
+</div>
 {% endblock %}
 {% block content %}
 <div class="container">
-    <h1>Horarios de la escuela de {{escuela}}</h1>
+    <h1>Horarios de la Escuela de {{escuela.text}}</h1>
     <form method="post" id="filter-form">
         {% csrf_token %}
         <div class="row">

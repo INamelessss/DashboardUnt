@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Course, Teacher, Research, Estudiante, CourseAssignment, Sede, Enrollment, Activo, Period, Sede, Factultad, Escuela,CourseSchedule
+from .models import Course, PAdministrativo, Teacher, Research, Estudiante, CourseAssignment, Sede, Enrollment, Activo, Period, Sede, Factultad, Escuela,CourseSchedule
 from django.db import models
 from django.db.models import Count, Avg, Min, Max
 from django.db.models import Sum
@@ -13,9 +13,12 @@ from roman import fromRoman
 import json
 from collections import Counter
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 
-facultades = [{"text":'Factultad de ingenieria', "name":'ingenieria',"escuelas":[{"text":'Ingenieria de sistemas',"name":'sistemas'},{"text":'Ingenieria de minas',"name":'minas'},{"text":'Ingenieria de ambiental',"name":'ambiental'},{"text":'Ingenieria civil',"name":'civil'},]},{"text":'Factultad de pruebas', "name":'ingenieria',"escuelas":[{"text":'Ingenieria de sistemas',"name":'sistemas'},{"text":'Ingenieria de minas',"name":'minas'},{"text":'Ingenieria de ambiental',"name":'ambiental'},{"text":'Ingenieria civil',"name":'civil'},]}] 
-
+def getEscuelaId(name_facultad, name_escuela):
+    idFacultad = Factultad.objects.get(name=name_facultad).id
+    idEscuela = Escuela.objects.get(facultad=idFacultad, name=name_escuela).id
+    return idFacultad, idEscuela
 
 def genRandomColor():
     randomHue = randint(0, 359)
@@ -67,7 +70,14 @@ def from_roman(roman):
 
     return integer_value
 
-def course_list(request, escuela):
+@login_required
+def course_list(request, facultad, escuela):
+    
+    idFacultad, idEscuela = getEscuelaId(facultad, escuela)
+    escuelas = Escuela.objects.filter(facultad=idFacultad)
+    escuela = escuelas.filter(name=escuela).first()
+
+    
     # Get query parameters from request URL
     course_name = request.GET.get('course_name')
     course_cycle = request.GET.get('course_cycle')
@@ -181,6 +191,8 @@ def course_list(request, escuela):
     sedes = Sede.objects.all()
 
     context = {
+        'facultad': facultad,
+        'escuelas': escuelas,
         'escuela':escuela,
         'period_options':period_options,
         'students_per_cycle_chart':students_per_cycle_chart,
@@ -194,7 +206,14 @@ def course_list(request, escuela):
     }
     return render(request, 'cursos/course_list.html', context)
 
-def malla(request, escuela):
+@login_required
+def malla(request, facultad, escuela):
+    
+    idFacultad, idEscuela = getEscuelaId(facultad, escuela)
+    escuelas = Escuela.objects.filter(facultad=idFacultad)
+    escuela = escuelas.filter(name=escuela).first()
+
+    
     # Get query parameters from request URL
     course_name = request.GET.get('course_name')
     course_cycle = request.GET.get('course_cycle')
@@ -223,7 +242,9 @@ def malla(request, escuela):
 
     courses = sorted(courses,key=sort_by_roman_numeral)
     context = {
+        'facultad': facultad,
         'escuela':escuela,
+        'escuelas': escuelas,
         'courses': courses,
         'total_credits': total_credits['total_credits'],
         'total_courses': total_courses,
@@ -231,9 +252,14 @@ def malla(request, escuela):
     }
     return render(request, 'cursos/malla.html', context)
 
+@login_required
 def dashboard(request):  
     
     periods = Period.objects.all()
+
+    facultades = Factultad.objects.all()
+
+    print(facultades)
 
     context = {
         'facultades':facultades,
@@ -242,7 +268,14 @@ def dashboard(request):
 
     return render(request, 'dashboard.html', context)
 
-def docentes(request, escuela):
+@login_required
+def docentes(request, facultad, escuela):
+    
+    idFacultad, idEscuela = getEscuelaId(facultad, escuela)
+    escuelas = Escuela.objects.filter(facultad=idFacultad)
+    escuela = escuelas.filter(name=escuela).first()
+
+    
     age_range = request.GET.get('age')
     modality = request.GET.get('modality')
     category_filter = request.GET.get('category')
@@ -438,7 +471,9 @@ def docentes(request, escuela):
         'modalidad_options': modalidad_options,
         'categoria_options': categoria_options,
         'grado_options': grado_options,
+        'facultad': facultad,
         'escuela':escuela,
+        'escuelas': escuelas,
         'teachers': teachers,
         'degree_data': degree_distribution,
         'contract_data': contract_distribution,
@@ -476,7 +511,14 @@ def docentes(request, escuela):
 
     return render(request, 'docentes.html', context)
 
-def schedule_view(request, escuela):
+@login_required
+def schedule_view(request, facultad, escuela):
+    
+    idFacultad, idEscuela = getEscuelaId(facultad, escuela)
+    escuelas = Escuela.objects.filter(facultad=idFacultad)
+    escuela = escuelas.filter(name=escuela).first()
+
+    
 
     course_teacher_map = {}
 
@@ -524,9 +566,16 @@ def schedule_view(request, escuela):
         hours_range.append('{:02d}:00'.format(hour))
 
     return render(request, 'schedule.html', {
-        'escuela':escuela,'courses': courses, 'schools': schools, 'cycles': cycles, 'hours_range': hours_range, 'days_of_week':days_of_week, 'course_teacher_map': course_teacher_map})
+        'escuelas': escuelas,'facultad': facultad,'escuela':escuela,'courses': courses, 'schools': schools, 'cycles': cycles, 'hours_range': hours_range, 'days_of_week':days_of_week, 'course_teacher_map': course_teacher_map})
 
-def research_analysis(request, escuela):
+@login_required
+def research_analysis(request, facultad, escuela):
+    
+    idFacultad, idEscuela = getEscuelaId(facultad, escuela)
+    escuelas = Escuela.objects.filter(facultad=idFacultad)
+    escuela = escuelas.filter(name=escuela).first()
+
+    
     # Teachers with research
     teachers_with_research = Teacher.objects.filter(research__isnull=False)
     teachers_with_research = teachers_with_research.filter(school=escuela)
@@ -597,6 +646,8 @@ def research_analysis(request, escuela):
         researchs = t_researchs
     print(researchs)
     context = {
+        'escuelas': escuelas,
+        'facultad': facultad,
         'escuela':escuela,
         'school_counts': school_counts,
         'type_counts': type_counts,
@@ -624,7 +675,14 @@ def roman_numeral(n):
     }
     return roman_numerals.get(n, str(n))
 
-def estudiantes(request, escuela):
+@login_required
+def estudiantes(request, facultad, escuela):
+    
+    idFacultad, idEscuela = getEscuelaId(facultad, escuela)
+    escuelas = Escuela.objects.filter(facultad=idFacultad)
+    escuela = escuelas.filter(name=escuela).first()
+
+
     filtro_sede = request.GET.get('sede')
     filtro_ciclo = request.GET.get('ciclo')
     courses = Course.objects.all()
@@ -696,6 +754,8 @@ def estudiantes(request, escuela):
     })
 
     context = {
+        'escuelas': escuelas,
+        'facultad': facultad,
         'escuela': escuela,
         'estudiantes': estudiantes_filtrados,
         'carreras': carreras,
@@ -708,7 +768,13 @@ def estudiantes(request, escuela):
 
     return render(request, 'estudiantes.html', context)
 
-def activos(request, escuela):
+@login_required
+def activos(request, facultad, escuela):
+    
+    idFacultad, idEscuela = getEscuelaId(facultad, escuela)
+    escuelas = Escuela.objects.filter(facultad=idFacultad)
+    escuela = escuelas.filter(name=escuela).first()
+
     # Inicialización de variables para filtros
     ambientes = Activo.objects.values_list('ambiente', flat=True).distinct()
     descripciones = Activo.objects.values_list('descripcion', flat=True).distinct()
@@ -838,22 +904,28 @@ def activos(request, escuela):
         'ambientes': ambientes,
         'descripciones': descripciones,
         'estados': estados,
+        'facultad': facultad,
         'escuela':escuela,
+        'escuelas': escuelas,
         'tabla_resumen2': tabla_resumen2,
         'totales_por_estado': totales_por_estado,
     })
 
-def employees(request, escuela):
-    employees = [{
-        "school": 'sistemas',
-        "surname_and_names": 'BRIONES HERAS DORIS ELIZABETH',
-        "job_title": 'SECRETARIA',
-        "email": 'dbriones@unitru.edu.pe',
-        "phone_number": '970025212'
-    }]
+@login_required
+def employees(request, facultad, escuela):
+    
+    idFacultad, idEscuela = getEscuelaId(facultad, escuela)
+    escuelas = Escuela.objects.filter(facultad=idFacultad)
+    escuela = escuelas.filter(name=escuela).first()
+    
+    employees = PAdministrativo.objects.all()
+
+    employees = employees.filter(escuela=idEscuela)
 
     context = {
+        'escuelas': escuelas,
         'employees': employees,
+        'facultad': facultad,
         'escuela':escuela,
     }
 

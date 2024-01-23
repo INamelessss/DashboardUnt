@@ -1,10 +1,22 @@
 {% extends 'base.html' %}
 {% block escuela %}
-  {{escuela}}
+<div class="dropstart">
+  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+    {{escuela.text}}
+  </button>
+  <ul class="dropdown-menu">
+    {% for item_escuela in escuelas %}
+      <a class="dropdown-item {% if item_escuela.id == escuela.id %}active{% endif %}" 
+        href="/dashboard/{{facultad}}/{{item_escuela.name}}/estudiantes">
+          {{item_escuela.text}}
+      </a>
+    {% endfor %}
+  </ul>
+</div>
 {% endblock %}
 {% block content %}
 <div class="container">
-  <h1>Personal administrativo de la Escuelas de {{escuela}}</h1>
+  <h1>Personal administrativo de la Escuela de {{escuela.text}}</h1>
   <div class="row mb-3">
     <div class="col-12">
       <input id="txtBusqueda" placeholder="Buscar por nombre y apellidos" type="text" class="form-control">
@@ -27,11 +39,11 @@
           <tbody id="tblDatos">
               {% for employee in employees %}
               <tr>
-                  <td class="text-center">{{ employee.school }}</td>
-                  <td class="busqueda">{{ employee.surname_and_names }}</td>
-                  <td class="busqueda">{{ employee.job_title }}</td>
+                  <td class="text-center">{{ employee.escuela.text }}</td>
+                  <td class="busqueda">{{ employee.name }}</td>
+                  <td class="busqueda">{{ employee.position }}</td>
                   <td class="text-center">{{ employee.email }}</td>
-                  <td class="text-center">{{ employee.phone_number }}</td>
+                  <td class="text-center">{{ employee.phone }}</td>
               </tr>
               {% endfor %}
           </tbody>

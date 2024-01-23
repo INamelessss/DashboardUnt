@@ -252,6 +252,15 @@
     .paginator-page:nth-child(1) {
         letter-spacing: 1px
     }
+
+    #floating-log-out{
+      position: sticky;
+      bottom: 0;
+      left: 100%;
+      padding: 2em;
+      width: fit-content;
+      z-index: 99999999;
+    }
   </style>
 </head>
 
@@ -266,28 +275,28 @@
     <div class="collapse navbar-collapse justify-content-start" id="navbarNav">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'malla' escuela %}">Malla Curricular</a>
+          <a class="nav-link" href="{% url 'malla' facultad escuela.name %}">Malla Curricular</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'course_list' escuela %}">Cursos</a>
+          <a class="nav-link" href="{% url 'course_list' facultad escuela.name %}">Cursos</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'docentes' escuela %}">Docentes</a>
+          <a class="nav-link" href="{% url 'docentes' facultad escuela.name %}">Docentes</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'horario' escuela %}">Horarios</a>
+          <a class="nav-link" href="{% url 'horario' facultad escuela.name %}">Horarios</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'estudiantes' escuela %}">Alumnos</a>
+          <a class="nav-link" href="{% url 'estudiantes' facultad escuela.name %}">Alumnos</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'research' escuela %}">Investigaciones</a>
+          <a class="nav-link" href="{% url 'research' facultad escuela.name %}">Investigaciones</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'personal' escuela %}">Personal administrativo</a>
+          <a class="nav-link" href="{% url 'personal' facultad escuela.name %}">Personal administrativo</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'activos' escuela %}">Infraestructura</a>
+          <a class="nav-link" href="{% url 'activos' facultad escuela.name %}">Infraestructura</a>
         </li>
       </ul>
     </div>
@@ -311,7 +320,15 @@
       </main>
     </div>
   </div>
-
+  <div id="floating-log-out">
+    {% if user.is_authenticated %}
+      <form action="{% url 'logout' %}" method="post" style="display: inline;">
+          {% csrf_token %}
+          <button class="btn btn-danger" type="submit">Cerrar Sesion
+          </button>
+      </form>
+    {% endif %}
+  </div>
   <!-- Bootstrap Scripts -->
 
 </body>

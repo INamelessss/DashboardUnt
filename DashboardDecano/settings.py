@@ -54,6 +54,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+LOGIN_URL = '/'
+
 ROOT_URLCONF = 'DashboardDecano.urls'
 
 TEMPLATES = [
