@@ -26,7 +26,7 @@
                     <select name="school" id="school" class="form-control">
                         <option value="">Seleccione una opción</option>
                         {% for school in schools %}
-                        <option value="{{ school }}" class="filter-option">{{ school }}</option>
+                        <option value="{{ school }}" {% if school == school %}selected{% endif %} class="filter-option"  >{{ school }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -37,7 +37,7 @@
                     <select name="cycle" id="cycle" class="form-control">
                         <option value="">Seleccione una opción</option>
                         {% for cycle in cycles %}
-                        <option value="{{ cycle }}" class="filter-option">{{ cycle }}</option>
+                        <option value="{{ cycle }}" {% if cycle == cycle %}selected{% endif %} class="filter-option">{{ cycle }}</option>
                         {% endfor %}
                     </select>
                 </div>

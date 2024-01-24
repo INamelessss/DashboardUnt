@@ -36,7 +36,7 @@
               <div class="card-body px-3">
                 {% load static %}
                 <div class="embed-responsive embed-responsive-16by9">
-                    <iframe class="embed-responsive-item" src="{% static 'pdf/malla_sistemas.pdf' %}" style="width:1200px; height:800px;"></iframe>
+                    <iframe class="embed-responsive-item" src="{% static 'pdf/' %}{{ malla.documento }}" style="width:1200px; height:800px;"></iframe>
                 </div>
               </div>
             </div>
@@ -50,6 +50,16 @@
                         <input type="text" class="form-control" name="course_name" id="course_name">
                     </div>
                 </div>
+                <div class="col-md-2">
+                  <div class="form-group">
+                      <label for="course_name">Malla:</label>
+                      <select class="form-control" name="malla" id="malla">
+                        {% for malla in mallas %}
+                        <option value="{{malla.id}}" {% if mall == malla_seleccionada %}selected{% endif %} >{{malla.año}}</option>
+                        {% endfor %}
+                    </select>
+                  </div>
+              </div>
                 <div class="col-md-2">
                     <div class="form-group">
                         <label for="course_cycle">Ciclo del curso:</label>

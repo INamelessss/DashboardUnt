@@ -225,7 +225,7 @@
           <tbody id="tblDatos">
               {% for teacher in teachers %}
               <tr>
-                  <td class="text-center">{{ teacher.school }}</td>
+                  <td class="text-center" style="text-transform: uppercase">{{ teacher.school.text }}</td>
                   <td class="busqueda">{{ teacher.surname_and_names }}</td>
                   <td class="text-center">{{ teacher.status }}</td>
                   <td class="text-center">{{ teacher.type }}</td>

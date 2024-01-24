@@ -95,7 +95,7 @@
                     <div class="tag-list">
                       {% for teacher in research.teacher.all %}
                         <div class="tag-item d-flex align-items-center" style="gap: 3px;">
-                          <span class="badge bg-secondary">{{ teacher.school }}</span>
+                          <span class="badge bg-secondary">{{ teacher.school.text }}</span>
                           {{ teacher.surname_and_names }}
                           {% if teacher == research.teacher.first %}
                             <span>(A)</span>

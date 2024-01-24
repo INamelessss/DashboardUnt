@@ -18,23 +18,60 @@
 </div>
 <div style="display: flex; flex-direction: column; border: 1px solid black; border-radius: 7px; overflow: auto;">
   
-  {% for facultad in facultades %}
+  {% for facultad_data in data %}
   <div style="display: flex; flex-direction: column">
     <div style="display: flex;background-color: #454556; color: white; padding: .6em 1.2em; border-bottom: 2px solid #242424; box-shadow: 0px 3px 11px #565667;">
-      <h2 style="flex-grow: 1;margin: 0;">{{facultad.text}}</h2>
+      <h2 style="flex-grow: 1;margin: 0;">{{ facultad_data.text }}</h2>
+      <!-- This toggle can be associated with facultad_data.name to make each faculty collapsible -->
       <label  class="toggle">
-        <input hidden type="checkbox" class="" name="desplegable" id="">
+        <input hidden type="checkbox" class="" name="desplegable" id="{{ facultad_data.name }}">
       </label>
     </div>
     <div class="cards-grid" style="padding: .7em 1.2em; overflow: hidden;">
-      {% for escuela in facultad.escuela_set.all %}
-      
-        <a href="{{facultad.name}}/{{escuela.name}}/docentes" class="contenedor-escuela">
+      {% for school in facultad_data.schools %}
+        <a href="{{ facultad_data.name }}/{{ school.name }}/docentes" class="contenedor-escuela">
           <h2 class="title">
-            {{escuela.text}}
+            {{ school.text }}
           </h2>
         </a>
       {% endfor %}
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th>Escuela</th>
+            <th>NRO DE MATRICULADOS TRUJILLO</th>
+            <th>NRO DE MATRICULADOS VALLE</th>
+            <th>TOTAL</th>
+            <th>NRO CURSOS DICTADO TRUJILLO</th>
+            <th>NRO CURSOS DICTADO VALLE</th>
+            <th>TOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for school in facultad_data.schools %}
+            <tr>
+              <td>{{ school.name }}</td>
+              <td>{{ school.enrolled_trujillo }}</td>
+              <td>{{ school.enrolled_valle }}</td>
+              <td>{{ school.enrolled_trujillo|add:school.enrolled_valle }}</td>
+              <td>{{ school.courses_trujillo }}</td>
+              <td>{{ school.courses_valle }}</td>
+              <td>{{ school.courses_trujillo|add:school.courses_valle }}</td>
+            </tr>
+          {% endfor %}
+          <tr class="table-primary">
+            <td>Total {{ facultad_data.name }}</td>
+            <td>{{ facultad_data.total_enrolled_trujillo }}</td>
+            <td>{{ facultad_data.total_enrolled_valle }}</td>
+            <td>{{ facultad_data.total_enrolled_trujillo|add:facultad_data.total_enrolled_valle }}</td>
+            <td>{{ facultad_data.total_courses_trujillo }}</td>
+            <td>{{ facultad_data.total_courses_valle }}</td>
+            <td>{{ facultad_data.total_courses_trujillo|add:facultad_data.total_courses_valle }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
   {% endfor %}

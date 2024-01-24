@@ -39,9 +39,9 @@
           <tbody id="tblDatos">
               {% for employee in employees %}
               <tr>
-                  <td class="text-center">{{ employee.escuela.text }}</td>
+                  <td class="text-center" style="text-transform: uppercase">{{ employee.escuela.text }}</td>
                   <td class="busqueda">{{ employee.name }}</td>
-                  <td class="busqueda">{{ employee.position }}</td>
+                  <td class="busqueda" style="text-transform: uppercase">{{ employee.position }}</td>
                   <td class="text-center">{{ employee.email }}</td>
                   <td class="text-center">{{ employee.phone }}</td>
               </tr>

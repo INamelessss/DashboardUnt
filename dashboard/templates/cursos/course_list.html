@@ -24,16 +24,16 @@
                         <label for="course_cycle">Ciclo del curso:</label>
                         <select class="form-select" name="course_cycle" id="course_cycle">
                             <option value="">Todos</option>
-                            <option value="I">I</option>
-                            <option value="II">II</option>
-                            <option value="III">III</option>
-                            <option value="IV">IV</option>
-                            <option value="V">V</option>
-                            <option value="VI">VI</option>
-                            <option value="VII">VII</option>
-                            <option value="VIII">VIII</option>
-                            <option value="IX">IX</option>
-                            <option value="X">X</option>
+                            <option value="I" {% if course_cycle == 'I' %}selected{% endif %}>I</option>
+                            <option value="II" {% if course_cycle == 'II' %}selected{% endif %}>II</option>
+                            <option value="III" {% if course_cycle == 'III' %}selected{% endif %}>III</option>
+                            <option value="IV" {% if course_cycle == 'IV' %}selected{% endif %}>IV</option>
+                            <option value="V" {% if course_cycle == 'V' %}selected{% endif %}>V</option>
+                            <option value="VI" {% if course_cycle == 'VI' %}selected{% endif %}>VI</option>
+                            <option value="VII" {% if course_cycle == 'VII' %}selected{% endif %}>VII</option>
+                            <option value="VIII" {% if course_cycle == 'VIII' %}selected{% endif %}>VIII</option>
+                            <option value="IX"{% if course_cycle == 'IX' %}selected{% endif %}>IX</option>
+                            <option value="X" {% if course_cycle == 'X' %}selected{% endif %}>X</option>
                         </select>
                     </div>
                 </div>
@@ -272,7 +272,7 @@
         })
         docentes.forEach(docente=>{
           row = document.createElement('tr')
-          htmlTemplate=`<td>${docente.teacher}</td><td class="text-center">${docente.sede}</td>`
+          htmlTemplate=`<td>${docente.teacher}</td><td class="text-center">${docente.sede_name}</td>`
           row.innerHTML = htmlTemplate
           tblDocentes.appendChild(row)
         })

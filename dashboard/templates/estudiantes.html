@@ -86,8 +86,8 @@
               <tr>
                   <td>{{ estudiante.numero_matricula }}</td>
                   <td>{{ estudiante.apellidos_nombres }}</td>
-                  <td>{{ estudiante.escuela }}</td>
-                  <td>{{ estudiante.sede }}</td>
+                  <td style="text-transform: uppercase">{{ estudiante.escuela.text }}</td>
+                  <td>{{ estudiante.sede.name }}</td>
               </tr>
               {% empty %}
               <tr>

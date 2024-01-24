@@ -6,18 +6,6 @@ class Sede(models.Model):
 class Period(models.Model):
     period = models.CharField(max_length=20)
 
-class Course(models.Model):
-    school = models.CharField(max_length=100)
-    code = models.CharField(max_length=100)
-    name = models.CharField(max_length=100)
-    type = models.CharField(max_length=100)
-    credits = models.IntegerField()
-    cycle = models.CharField(max_length=100)
-    ht = models.IntegerField()
-    hp = models.IntegerField()
-    hl = models.IntegerField()
-    period = models.ForeignKey(Period, on_delete=models.CASCADE, default=1)
-
 class Factultad(models.Model):
     name = models.CharField(max_length=100)
     text = models.CharField(max_length=30)
@@ -32,6 +20,19 @@ class Malla(models.Model):
     escuela = models.ForeignKey(Escuela, on_delete=models.CASCADE)
     documento = models.CharField(max_length=100)
     año = models.CharField(max_length=4)
+
+class Course(models.Model):
+    school = models.CharField(max_length=100)
+    code = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
+    type = models.CharField(max_length=100)
+    credits = models.IntegerField()
+    cycle = models.CharField(max_length=100)
+    ht = models.IntegerField()
+    hp = models.IntegerField()
+    hl = models.IntegerField()
+    period = models.ForeignKey(Period, on_delete=models.CASCADE, default=1)
+    malla = models.ForeignKey(Malla, on_delete=models.CASCADE, default=1)
 
 class PAdministrativo(models.Model):
     escuela = models.ForeignKey(Escuela, on_delete=models.CASCADE)
@@ -52,7 +53,7 @@ class Teacher(models.Model):
         ('Main', 'Main'),
     )
 
-    school = models.CharField(max_length=100)
+    school = models.ForeignKey(Escuela, on_delete=models.CASCADE, default = 1)
     surname_and_names = models.CharField(max_length=100)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
@@ -111,9 +112,10 @@ class Research(models.Model):
 class Estudiante(models.Model):
     numero_matricula = models.CharField(max_length=10, unique=True)
     apellidos_nombres = models.CharField(max_length=200)
-    escuela = models.CharField(max_length=100)
-    sede = models.CharField(max_length=100)
+    escuela = models.ForeignKey(Escuela, on_delete=models.CASCADE, default = 1)
+    sede = models.ForeignKey(Sede, on_delete=models.CASCADE, default=1) 
     period = models.ForeignKey(Period, on_delete=models.CASCADE, default=1)
+    malla = models.ForeignKey(Malla, on_delete=models.CASCADE, default=1)
 
 class Enrollment(models.Model):
     student = models.ForeignKey(Estudiante, on_delete=models.CASCADE)
@@ -131,3 +133,4 @@ class Activo(models.Model):
     estado = models.CharField(max_length=20)
     observaciones = models.TextField()
     ambiente = models.CharField(max_length=50)
+    escuela = models.ForeignKey(Escuela, on_delete=models.CASCADE, default = 1)

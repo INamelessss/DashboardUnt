@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Course, PAdministrativo, Teacher, Research, Estudiante, CourseAssignment, Sede, Enrollment, Activo, Period, Sede, Factultad, Escuela,CourseSchedule
+from .models import Course, PAdministrativo, Teacher, Research, Estudiante, CourseAssignment, Sede, Enrollment, Activo, Period, Sede, Factultad, Escuela,CourseSchedule, Malla
 from django.db import models
 from django.db.models import Count, Avg, Min, Max
 from django.db.models import Sum
@@ -18,6 +18,7 @@ from django.contrib.auth.decorators import login_required
 def getEscuelaId(name_facultad, name_escuela):
     idFacultad = Factultad.objects.get(name=name_facultad).id
     idEscuela = Escuela.objects.get(facultad=idFacultad, name=name_escuela).id
+    print(idEscuela)
     return idFacultad, idEscuela
 
 def genRandomColor():
@@ -76,12 +77,12 @@ def course_list(request, facultad, escuela):
     idFacultad, idEscuela = getEscuelaId(facultad, escuela)
     escuelas = Escuela.objects.filter(facultad=idFacultad)
     escuela = escuelas.filter(name=escuela).first()
-
     
     # Get query parameters from request URL
     course_name = request.GET.get('course_name')
     course_cycle = request.GET.get('course_cycle')
     course_period = request.GET.get('course_period')
+    malla = request.GET.get('malla')
 
     # Filter courses based on query parameters
     courses = Course.objects.all()
@@ -92,6 +93,8 @@ def course_list(request, facultad, escuela):
         courses = courses.filter(cycle=course_cycle)
     if course_period:
         courses = courses.filter(period__period=course_period)
+    if malla: 
+        courses = courses.filter(malla=malla)
 
     period_options = courses.values_list('period__period',flat=True).distinct().order_by('period')
 
@@ -158,33 +161,37 @@ def course_list(request, facultad, escuela):
         'hl': courses.aggregate(Sum('hl'))['hl__sum'],
     }
 
-    course_sede_counts = {course.id: {'Trujillo': 0, 'El Valle': 0} for course in courses}
+    course_sede_counts = {course.id: {'TRUJILLO': 0, 'VALLE': 0} for course in courses}
 
     for count in course_enrollment_counts:
         course_id = Course.objects.get(name=count['name'], cycle=count['cycle']).id
-        sede_name = count['sede']
+        sede_id = count['sede']
+        sede = Sede.objects.get(id=sede_id)
+        sede_name = sede.name
         total = count['total']
         if course_id in course_sede_counts:
             course_sede_counts[course_id][sede_name] = total
 
     for course in courses:
-        course.trujillo_count = course_sede_counts[course.id]['Trujillo']
-        course.el_valle_count = course_sede_counts[course.id]['El Valle']
+        course.trujillo_count = course_sede_counts[course.id]['TRUJILLO']
+        course.el_valle_count = course_sede_counts[course.id]['VALLE']
 
     normalized_sede_counts = {}
     for count in course_enrollment_counts:
-        sede_name = count['sede'].upper()  # Convertir a mayúsculas
+        sede_id = count['sede']
+        sede = Sede.objects.get(id=sede_id)
+        sede_name = sede.name.upper()
         course_id = Course.objects.get(name=count['name'], cycle=count['cycle']).id
         total = count['total']
         if course_id not in normalized_sede_counts:
-            normalized_sede_counts[course_id] = {'TRUJILLO': 0, 'EL VALLE': 0}
+            normalized_sede_counts[course_id] = {'TRUJILLO': 0, 'VALLE': 0}
         normalized_sede_counts[course_id][sede_name] = total
 
     for course in courses:
         course_id = course.id
         if course_id in normalized_sede_counts:
             course.trujillo_count = normalized_sede_counts[course_id]['TRUJILLO']
-            course.el_valle_count = normalized_sede_counts[course_id]['EL VALLE']
+            course.el_valle_count = normalized_sede_counts[course_id]['VALLE']
 
     courses = sorted(courses,key=sort_by_roman_numeral)
 
@@ -213,7 +220,8 @@ def malla(request, facultad, escuela):
     escuelas = Escuela.objects.filter(facultad=idFacultad)
     escuela = escuelas.filter(name=escuela).first()
 
-    
+    mallas = Malla.objects.filter(escuela=escuela).order_by('-año')
+    malla_seleccionada = mallas.first()
     # Get query parameters from request URL
     course_name = request.GET.get('course_name')
     course_cycle = request.GET.get('course_cycle')
@@ -228,6 +236,8 @@ def malla(request, facultad, escuela):
         courses = courses.filter(cycle=course_cycle)
     if course_type:
         courses = courses.filter(type=course_type)
+    if malla_seleccionada:
+        courses = courses.filter(malla=malla_seleccionada)
 
     # Calculate total credits and course count
     total_credits = courses.aggregate(total_credits=models.Sum('credits'))
@@ -249,23 +259,81 @@ def malla(request, facultad, escuela):
         'total_credits': total_credits['total_credits'],
         'total_courses': total_courses,
         'chart_data': chart_data,
+        'mallas':mallas,
+        'malla_seleccionada': malla_seleccionada,
     }
     return render(request, 'cursos/malla.html', context)
 
 @login_required
 def dashboard(request):  
-    
     periods = Period.objects.all()
-
     facultades = Factultad.objects.all()
+    sedes = Sede.objects.all()
+    current_period = periods.order_by('-id').first()
+    data = []
 
-    print(facultades)
+    for facultad in facultades:
+        facultad_data = {
+            'name': facultad.name,
+            'text': facultad.text,
+            'schools': [],
+            'total_enrolled_trujillo': 0,
+            'total_enrolled_valle': 0,
+            'total_courses_trujillo': 0,
+            'total_courses_valle': 0,
+        }
+
+        escuelas = facultad.escuela_set.all()
+        for escuela in escuelas:
+            escuela_data = {
+                'name': escuela.name,
+                'text': escuela.text,
+                'enrolled_trujillo': 0,
+                'enrolled_valle': 0,
+                'courses_trujillo': 0,
+                'courses_valle': 0,
+            }
+
+            enrolled_trujillo = Estudiante.objects.filter(escuela=escuela, sede__name='Trujillo').count()
+            enrolled_valle = Estudiante.objects.filter(escuela=escuela, sede__name='Valle').count()
+            escuela_data['enrolled_trujillo'] = enrolled_trujillo
+            escuela_data['enrolled_valle'] = enrolled_valle
+
+            facultad_data['total_enrolled_trujillo'] += enrolled_trujillo
+            facultad_data['total_enrolled_valle'] += enrolled_valle
+
+            for sede in sedes:
+                courses_in_period = Course.objects.filter(
+                    malla__escuela=escuela, 
+                    period=current_period
+                ).distinct()
+                courses_count = 0
+                for course in courses_in_period:
+                    if Enrollment.objects.filter(
+                        course=course, 
+                        student__sede=sede,
+                        period=current_period
+                    ).exclude(student__numero_matricula=0).exists():
+                        courses_count += 1
+                
+                if sede.name == 'Trujillo':
+                    escuela_data['courses_trujillo'] = courses_count
+                    facultad_data['total_courses_trujillo'] += courses_count
+                elif sede.name == 'Valle':
+                    escuela_data['courses_valle'] = courses_count
+                    facultad_data['total_courses_valle'] += courses_count
+
+            facultad_data['schools'].append(escuela_data)
+        
+        data.append(facultad_data)
+
 
     context = {
-        'facultades':facultades,
-        'periods':periods
+        'facultades': facultades,
+        'periods': periods,
+        'data': data,
+        'current_period': current_period,
     }
-
     return render(request, 'dashboard.html', context)
 
 @login_required
@@ -273,9 +341,8 @@ def docentes(request, facultad, escuela):
     
     idFacultad, idEscuela = getEscuelaId(facultad, escuela)
     escuelas = Escuela.objects.filter(facultad=idFacultad)
-    escuela = escuelas.filter(name=escuela).first()
+    escuela = escuelas.filter(id=idEscuela).first()
 
-    
     age_range = request.GET.get('age')
     modality = request.GET.get('modality')
     category_filter = request.GET.get('category')
@@ -455,7 +522,6 @@ def docentes(request, facultad, escuela):
             'without_research': without_count,
         })
 
-    # Calcular el porcentaje
     if (teachers.count() != 0):
         percentage_teachers_with_research = (teachers.filter(research__isnull=False).distinct().count() / teachers.count()) * 100
     else:
@@ -512,8 +578,6 @@ def schedule_view(request, facultad, escuela):
     escuelas = Escuela.objects.filter(facultad=idFacultad)
     escuela = escuelas.filter(name=escuela).first()
 
-    
-
     course_teacher_map = {}
 
     if request.method == 'POST':
@@ -523,7 +587,7 @@ def schedule_view(request, facultad, escuela):
         courses = Course.objects.filter(
             courseschedule__headquarters__name=selected_school, 
             cycle=selected_cycle, 
-            school=escuela
+            school=escuela.id
         ).distinct()
 
         schools = CourseSchedule.objects.values_list('headquarters__name', flat=True).distinct()
@@ -568,30 +632,7 @@ def research_analysis(request, facultad, escuela):
     escuelas = Escuela.objects.filter(facultad=idFacultad)
     escuela = escuelas.filter(name=escuela).first()
 
-    
-    teachers_with_research = Teacher.objects.filter(research__isnull=False)
-    teachers_with_research = teachers_with_research.filter(school=escuela)
-    schools = teachers_with_research.values('school').distinct()
-    school_counts = []
-    for school in schools:
-        count = teachers_with_research.filter(school=school['school']).count()
-        school_counts.append((school['school'], count))
-
-    research_types = Research.objects.values('type_of_research').distinct()
-    type_counts = []
-    for research_type in research_types:
-        count = Research.objects.filter(type_of_research=research_type['type_of_research']).count()
-        type_counts.append((research_type['type_of_research'], count))
-
-    conditions = teachers_with_research.values('status').distinct()
-    condition_counts = []
-    for condition in conditions:
-        count = teachers_with_research.filter(status=condition['status']).count()
-        condition_counts.append((condition['status'], count))
-
-    total_budget = Research.objects.aggregate(total_budget=models.Sum('budget'))
-
-    total_projects = Research.objects.count()
+    teacher  = request.GET.get('main_teacher',None)
 
     main_researcher_school = Teacher.objects.filter(
         research__id=OuterRef('id')
@@ -601,24 +642,53 @@ def research_analysis(request, facultad, escuela):
         main_researcher_school=Subquery(main_researcher_school)
     ).filter(main_researcher_school=escuela).distinct()
 
+    if teacher:
+        researchs = researchs.filter(teacher=teacher)
+
+    teachers_with_research = Teacher.objects.filter(research__isnull=False)
+    teachers_with_research = teachers_with_research.filter(school=escuela).distinct()
+
+    schools = teachers_with_research.values('school').distinct()
+    school_counts = []
+    for school in schools:
+        count = teachers_with_research.filter(school=school['school']).count()
+        school_counts.append((school['school'], count))
+
+    research_types = researchs.values('type_of_research').distinct()
+    type_counts = []
+    for research_type in research_types:
+        count = researchs.filter(type_of_research=research_type['type_of_research']).count()
+        type_counts.append((research_type['type_of_research'], count))
+
+    conditions = teachers_with_research.values('status').distinct()
+    condition_counts = []
+    for condition in conditions:
+        count = teachers_with_research.filter(status=condition['status']).count()
+        condition_counts.append((condition['status'], count))
+
+    total_budget = researchs.aggregate(total_budget=models.Sum('budget'))
+
+    total_projects = researchs.count()
+
     # researchs = Research.objects.all()
 
+    researchs2 = Research.objects.annotate(
+        main_researcher_school=Subquery(main_researcher_school)
+    ).filter(main_researcher_school=escuela).distinct()
+
     main_researchers = []
-    for research in researchs:
+    for research in researchs2:
       main_teacher = research.teacher.first()
       main_researchers.append(main_teacher)
-      print('reasearch: ', main_teacher)
 
     # print(researchs.values())
             
     # researchs = researchs.filter(teacher__school=escuela).distinct()
 
     # researchs.filter(school=escuela)
+
     research_line_counts = Counter(researchs.values_list('research_line', flat=True))
     research_line_counts_list = list(research_line_counts.items())
-    
-    teacher  = request.GET.get('main_teacher',None)
-    print('teacher', teacher)
     if teacher:
         t_researchs = []
         
@@ -626,10 +696,9 @@ def research_analysis(request, facultad, escuela):
           main_teacher = research.teacher.first()
           print( main_teacher.id, teacher, teacher == main_teacher.id)
           if str(teacher) == str(main_teacher.id):
-              print('founded')
               t_researchs.append(research)
         researchs = t_researchs
-    print(researchs)
+
     context = {
         'escuelas': escuelas,
         'facultad': facultad,
@@ -642,6 +711,7 @@ def research_analysis(request, facultad, escuela):
         'research_line_counts': research_line_counts_list,
         'researchs': researchs,
         'main_researchers': main_researchers,
+        'teachers_with_research':teachers_with_research
     }
     return render(request, 'research_analysis.html', context)
 
@@ -674,8 +744,11 @@ def estudiantes(request, facultad, escuela):
 
     estudiantes_filtrados = Estudiante.objects.all()
 
+    if escuela:
+        estudiantes_filtrados = estudiantes_filtrados.filter(escuela=escuela)
+
     if filtro_sede:
-        estudiantes_filtrados = estudiantes_filtrados.filter(sede=filtro_sede)
+        estudiantes_filtrados = estudiantes_filtrados.filter(sede__name=filtro_sede)
     
     if filtro_ciclo:
         estudiantes_filtrados = estudiantes_filtrados.filter(enrollment__course__cycle=filtro_ciclo).distinct()
@@ -692,9 +765,9 @@ def estudiantes(request, facultad, escuela):
         estudiantes_pagina = paginator.page(paginator.num_pages)
 
     carreras = Estudiante.objects.values_list('escuela', flat=True).distinct()
-    sedes = Estudiante.objects.values_list('sede', flat=True).distinct()
+    sedes = Estudiante.objects.values_list('sede__name', flat=True).distinct()
 
-    enrollments = Enrollment.objects.select_related('course', 'student')
+    enrollments = Enrollment.objects.select_related('course', 'student').filter(student__escuela=escuela)
     student_lowest_cycles = {}
     for enrollment in enrollments:
         student_id = enrollment.student.id
@@ -709,8 +782,8 @@ def estudiantes(request, facultad, escuela):
             if valor == numero + 1:
                 students_per_cycle_counts[numero] += 1
 
-    sede_counts = estudiantes_filtrados.values('sede').annotate(total=Count('id')).distinct()
-    sedes_labels = [item['sede'] for item in sede_counts]
+    sede_counts = estudiantes_filtrados.values('sede__name').annotate(total=Count('id')).distinct()
+    sedes_labels = [item['sede__name'] for item in sede_counts]
     sedes_totals = [item['total'] for item in sede_counts]
 
     ciclo_labels = [f"{roman_numeral(i)}" for i in range(1, 11)]
@@ -748,7 +821,7 @@ def estudiantes(request, facultad, escuela):
         'filtro_sede': filtro_sede,
         'filtro_ciclo': filtro_ciclo,
         'sede_data': sede_data,
-        'ciclo_data': ciclo_data, 
+        'ciclo_data': ciclo_data,
     }
 
     return render(request, 'estudiantes.html', context)
@@ -772,6 +845,8 @@ def activos(request, facultad, escuela):
 
     queryset = Activo.objects.all()
 
+    if escuela:
+        queryset = queryset.filter(escuela=escuela)
     if filtro_ambiente:
         queryset = queryset.filter(ambiente=filtro_ambiente)
     if filtro_descripcion:
@@ -816,7 +891,6 @@ def activos(request, facultad, escuela):
         'labels': list(ambientes),
         'datasets': datasets
     }
-
     datos_grafico_barras_json = json.dumps(datos_grafico_barras)
 
     tabla_resumen = queryset.values('ambiente', 'descripcion', 'estado').annotate(total=Count('id'))
@@ -827,9 +901,9 @@ def activos(request, facultad, escuela):
 
     print('datos barras', datos_pastel)
 
-    conteo_por_estado = Activo.objects.values('descripcion', 'estado').annotate(cantidad=Count('id')).order_by('descripcion', 'estado')
+    conteo_por_estado = queryset.values('descripcion', 'estado').annotate(cantidad=Count('id')).order_by('descripcion', 'estado')
 
-    totales_por_descripcion = Activo.objects.values('descripcion').annotate(total=Count('id')).order_by('descripcion')
+    totales_por_descripcion = queryset.values('descripcion').annotate(total=Count('id')).order_by('descripcion')
 
     tabla_resumen2 = {}
     for descripcion in totales_por_descripcion:
@@ -851,6 +925,9 @@ def activos(request, facultad, escuela):
         'BAJA': sum(item['BAJA'] for item in tabla_resumen2.values()),
         'total': total_general,
     }
+
+    print(total_general)
+    if total_general == 0: total_general = 1
 
     for equipo, totales in tabla_resumen2.items():
         tabla_resumen2[equipo]['operativo_percent'] = (totales['OPERATIVO'] / total_general) * 100
@@ -887,7 +964,7 @@ def employees(request, facultad, escuela):
     idFacultad, idEscuela = getEscuelaId(facultad, escuela)
     escuelas = Escuela.objects.filter(facultad=idFacultad)
     escuela = escuelas.filter(name=escuela).first()
-    
+
     employees = PAdministrativo.objects.all()
 
     employees = employees.filter(escuela=idEscuela)
@@ -905,20 +982,18 @@ def api_course_students(request,curso):
     
     sede_students = request.GET.get('sede')
 
-    print(sede_students)
-
     assignments = CourseAssignment.objects.filter(course=curso)
     
     enrollments = Enrollment.objects.filter(course=curso)
 
     sede_conversion = {
       "1":"TRUJILLO",
-      "2":"EL VALLE",
+      "2":"VALLE",
     }
 
     if sede_students:
         print('filtering')
-        enrollments = enrollments.filter(student__sede=sede_conversion[sede_students])
+        enrollments = enrollments.filter(student__sede__name=sede_conversion[sede_students])
 
     enrolled_students = [
         {
@@ -926,9 +1001,9 @@ def api_course_students(request,curso):
             'student_id': enrollment.student.id,
             'student_names': enrollment.student.apellidos_nombres,
             'student_code': enrollment.student.numero_matricula,
-            'student_sede': enrollment.student.sede,
+            'student_sede': enrollment.student.sede.name,
             'times': enrollment.times_taken,
-            'period': enrollment.period,
+            'period': enrollment.period.period,
         }
         for enrollment in enrollments
     ]
@@ -936,7 +1011,7 @@ def api_course_students(request,curso):
     assigned_teachers = [
         {
             "teacher": assignment.teacher.surname_and_names,
-            "sede": assignment.sede.name
+            "sede_name": assignment.sede.name
         }
         for assignment in assignments
     ]
