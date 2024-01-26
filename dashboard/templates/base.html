@@ -404,13 +404,11 @@
             }
 
             const refreshPaginator = function() {
+                let a = table.parentNode.querySelector('tfoot')
+                if (a != null) {
+                    a.remove();
+                }
                 if (nPaginas > 1 && options.paginable) {
-                    let a = table.parentNode.querySelector('tfoot')
-                    console.log(a);
-                    if (a != null) {
-                        console.log(a);
-                        a.remove();
-                    }
                     const t_foot = document.createElement('tfoot');
                     table.parentNode.appendChild(t_foot);
                     const t_row = document.createElement('tr');

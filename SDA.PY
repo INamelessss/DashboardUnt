@@ -327,13 +327,15 @@ def docentes(request, escuela):
         '61+ years': '61+',
     }
 
-    teachers = Teacher.objects.all()
+    print(current_year)
 
     teachers = Teacher.objects.annotate(
         work=current_year - ExtractYear('income'),
-        age=current_year - ExtractYear('birth'),
-    )
-    teachers = teachers.exclude(birth__isnull=True)
+        age=Case(
+            When(current_year - ExtractYear('birth')==current_year, then=Value(1)),
+            default=current_year - ExtractYear('birth'),
+            output_field=IntegerField()
+        ))
 
     modalidad_options = teachers.values_list('type',flat=True).distinct().order_by('type')
     categoria_options = teachers.values_list('category',flat=True).distinct().order_by('category')
