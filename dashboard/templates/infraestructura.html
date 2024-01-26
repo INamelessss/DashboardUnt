@@ -7,7 +7,7 @@
   <ul class="dropdown-menu">
     {% for item_escuela in escuelas %}
       <a class="dropdown-item {% if item_escuela.id == escuela.id %}active{% endif %}" 
-        href="/dashboard/{{facultad}}/{{item_escuela.name}}/docentes">
+        href="/dashboard/{{facultad}}/{{item_escuela.name}}/infraestructura">
           {{item_escuela.text}}
       </a>
     {% endfor %}

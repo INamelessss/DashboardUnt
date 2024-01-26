@@ -291,23 +291,14 @@
       .then(response=>response.json())
       .then(data=>{
         const tblAlumnos = document.querySelector('#tblAlumnos')
-        const tblDocentes = document.querySelector('#tblDocentes')
         tblAlumnos.innerHTML = '';
-        tblDocentes.innerHTML = '';
         alumnos = data.students
-        docentes = data.teachers
         console.log(data);
         alumnos.forEach(alumno=>{
           row = document.createElement('tr')
           htmlTemplate=`<td class='busqueda'>${alumno.student_code}</td><td class='busqueda'>${alumno.student_names}</td><td class='busqueda'>${alumno.student_sede}</td><td>${alumno.times}</td>`
           row.innerHTML = htmlTemplate
           tblAlumnos.appendChild(row)
-        })
-        docentes.forEach(docente=>{
-          row = document.createElement('tr')
-          htmlTemplate=`<td>${docente.teacher}</td><td>${docente.sede}</td>`
-          row.innerHTML = htmlTemplate
-          tblDocentes.appendChild(row)
         })
         functionesAlumnos.updateDatos();
       })
