@@ -10,7 +10,6 @@ class Factultad(models.Model):
     name = models.CharField(max_length=100)
     text = models.CharField(max_length=30)
 
-
 class Escuela(models.Model):
     name = models.CharField(max_length=100)
     text = models.CharField(max_length=30)

@@ -14,6 +14,7 @@ import json
 from collections import Counter
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
 
 
 def get_facultades(request):
@@ -594,59 +595,79 @@ def docentes(request, facultad, escuela):
 
 @login_required
 def schedule_view(request, facultad, escuela):
-    
+
     idFacultad, idEscuela = getEscuelaId(facultad, escuela)
     escuelas = Escuela.objects.filter(facultad=idFacultad)
     escuela = escuelas.filter(name=escuela).first()
 
     course_teacher_map = {}
 
-    if request.method == 'GET':
-        selected_school = request.GET.get('school')
-        selected_cycle = request.GET.get('cycle')
+    selected_school = request.GET.get('school')
+    selected_cycle = request.GET.get('cycle')
 
+    schools = CourseSchedule.objects.values_list('headquarters__name', flat=True).distinct()
+    cycles = Course.objects.values_list('cycle', flat=True).distinct()
+    cycles = sorted(cycles, key=sort_by_roman_numeral2)
+
+    course_schedules = []
+
+    if selected_school and selected_cycle:
+        sede = get_object_or_404(Sede, name=selected_school)
+
+        schedules_queryset = CourseSchedule.objects.filter(
+            headquarters=sede,
+            course_model__cycle=selected_cycle,
+            course_model__school=escuela.id
+        ).select_related('course_model', 'headquarters', 'period').order_by('course_model', 'day', 'start_time')
+
+        assignments_queryset = CourseAssignment.objects.filter(
+            sede=sede,
+            course__cycle=selected_cycle,
+            course__school=escuela.id
+        ).select_related('course', 'teacher')
+
+        course_teacher_map = {
+            assignment.course.id: assignment.teacher.surname_and_names
+            for assignment in assignments_queryset
+        }
+
+        grouped_schedules = {}
+        for schedule in schedules_queryset:
+            course_id = schedule.course_model.id
+            if course_id not in grouped_schedules:
+                grouped_schedules[course_id] = {
+                    'course': schedule.course_model,
+                    'schedules': [],
+                    'classroom': schedule.classroom,
+                    'teacher_name': course_teacher_map.get(course_id, 'No teacher assigned'),
+                    'section': schedule.section,
+                }
+            grouped_schedules[course_id]['schedules'].append(schedule)
+
+        course_schedules = list(grouped_schedules.values())
         
-
-        courses = Course.objects.filter(
-            courseschedule__headquarters__name=selected_school, 
-            cycle=selected_cycle, 
-            school=escuela.id
-        ).distinct()
-
-        schools = CourseSchedule.objects.values_list('headquarters__name', flat=True).distinct()
-        cycles = Course.objects.values_list('cycle', flat=True).distinct()
-
-        cycles= sorted(cycles, key=sort_by_roman_numeral2)  
-        courses = courses.prefetch_related('courseschedule_set', 'courseassignment_set')
-
-        for index, course in enumerate(courses):
-            course.color = getColorFromSet(index, len(courses))
-        
-        for course in courses:
-            course_assignments = course.courseassignment_set.all()
-            if course_assignments:
-                assignment = course_assignments[0]
-                course_teacher_map[course.id] = assignment.teacher
-                course.teacher_name = assignment.teacher.surname_and_names
-            else:
-                course.teacher_name = 'No teacher assigned'
+        for index, course_data in enumerate(course_schedules):
+            course_data['color'] = getColorFromSet(index, len(grouped_schedules))
 
     else:
-        schools = CourseSchedule.objects.values_list('headquarters__name', flat=True).distinct()
-        cycles = Course.objects.values_list('cycle', flat=True).distinct()
-        cycles= sorted(cycles, key=sort_by_roman_numeral2)
-
-        courses = []
+        course_schedules = []
 
     days_of_week = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
-    hours_range = []
-    start_hour = 7
-    end_hour = 22
-    for hour in range(start_hour, end_hour + 1):
-        hours_range.append('{:02d}:00'.format(hour))
+    hours_range = [f'{hour:02d}:00' for hour in range(7, 23)]
 
     return render(request, 'schedule.html', {
-        'escuelas': escuelas,'facultad': facultad,'escuela':escuela,'courses': courses, 'schools': schools, 'cycles': cycles, 'hours_range': hours_range, 'days_of_week':days_of_week, 'course_teacher_map': course_teacher_map})
+        'escuelas': escuelas,
+        'facultad': facultad,
+        'escuela': escuela,
+        'course_schedules': course_schedules,
+        'schools': schools,
+        'cycles': cycles,
+        'hours_range': hours_range,
+        'days_of_week': days_of_week,
+        'course_teacher_map': course_teacher_map,
+        'selected_school': selected_school,
+        'selected_cycle': selected_cycle,
+    })
 
 @login_required
 def research_analysis(request, facultad, escuela):
