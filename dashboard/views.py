@@ -27,7 +27,7 @@ def genRandomColor():
 
 def getColorFromSet(index, set_length):
     set_length = 1 if(set_length<1) else set_length
-    return f'hsl({index*(360/set_length)%360}deg,50%,76%)'
+    return f'hsl({index*(360/set_length)%360}deg,50%,83%)'
 
 def sort_by_roman_numeral(course):
     return int(course.cycle) if course.cycle.isdigit() else from_roman(course.cycle.upper())
