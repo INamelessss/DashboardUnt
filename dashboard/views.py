@@ -48,7 +48,7 @@ def genRandomColor():
 
 def getColorFromSet(index, set_length):
     set_length = 1 if(set_length<1) else set_length
-    return f'hsl({index*(360/set_length)%360}deg,50%,76%)'
+    return f'hsl({index*(360/set_length)%360}deg,50%,83%)'
 
 def sort_by_roman_numeral(course):
     return int(course.cycle) if course.cycle.isdigit() else from_roman(course.cycle.upper())
@@ -605,6 +605,8 @@ def schedule_view(request, facultad, escuela):
         selected_school = request.GET.get('school')
         selected_cycle = request.GET.get('cycle')
 
+        
+
         courses = Course.objects.filter(
             courseschedule__headquarters__name=selected_school, 
             cycle=selected_cycle, 
@@ -700,7 +702,8 @@ def research_analysis(request, facultad, escuela):
     main_researchers = []
     for research in researchs2:
       main_teacher = research.teacher.first()
-      main_researchers.append(main_teacher)
+      if not (main_teacher in main_researchers):  
+        main_researchers.append(main_teacher)
 
     # print(researchs.values())
             
