@@ -30,5 +30,10 @@ urlpatterns = [
     path('dashboard/<str:facultad>/<str:escuela>/research/', views.research_analysis, name='research'),
     path('dashboard/<str:facultad>/<str:escuela>/estudiantes/', views.estudiantes, name='estudiantes'),
     path('dashboard/<str:facultad>/<str:escuela>/infraestructura/', views.activos, name='activos'),
-    path('api/matriculados/<int:curso>', views.api_course_students, name='api.matriculados')
+    path('api/matriculados/<int:curso>', views.api_course_students, name='api.matriculados'),
+    path('get-facultades/', views.get_facultades, name='get-facultades'),
+    path('get-escuelas/<int:facultad_id>/', views.get_escuelas, name='get-escuelas'),
+    path('get-periodos/', views.get_periods, name='get-periodos'),
+    path('get-distinct-ambientes/', views.get_distinct_ambientes, name='get-distinct-ambientes'),
+    path('get-distinct-descripcion/', views.get_distinct_descripcion, name='get-distinct-descripcion'),
 ]

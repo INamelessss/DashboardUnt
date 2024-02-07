@@ -15,6 +15,27 @@ from collections import Counter
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 
+
+def get_facultades(request):
+    facultades = Factultad.objects.all().values('id', 'name')
+    return JsonResponse(list(facultades), safe=False)
+
+def get_periods(request):
+    periodos = Period.objects.all().values('id', 'period')
+    return JsonResponse(list(periodos), safe=False)
+
+def get_escuelas(request, facultad_id):
+    escuelas = Escuela.objects.filter(facultad_id=facultad_id).values('id', 'name')
+    return JsonResponse(list(escuelas), safe=False)
+
+def get_distinct_ambientes(request):
+    ambientes = Activo.objects.order_by('ambiente').values_list('ambiente', flat=True).distinct()
+    return JsonResponse(list(ambientes), safe=False)
+
+def get_distinct_descripcion(request):
+    descripciones = Activo.objects.order_by('descripcion').values_list('descripcion', flat=True).distinct()
+    return JsonResponse(list(descripciones), safe=False)
+
 def getEscuelaId(name_facultad, name_escuela):
     idFacultad = Factultad.objects.get(name=name_facultad).id
     idEscuela = Escuela.objects.get(facultad=idFacultad, name=name_escuela).id
@@ -580,9 +601,9 @@ def schedule_view(request, facultad, escuela):
 
     course_teacher_map = {}
 
-    if request.method == 'POST':
-        selected_school = request.POST['school']
-        selected_cycle = request.POST['cycle']
+    if request.method == 'GET':
+        selected_school = request.GET.get('school')
+        selected_cycle = request.GET.get('cycle')
 
         courses = Course.objects.filter(
             courseschedule__headquarters__name=selected_school, 
@@ -839,9 +860,9 @@ def activos(request, facultad, escuela):
     estados = Activo.objects.values_list('estado', flat=True).distinct()
     computadores = Activo.objects.values_list('numero_pc', flat=True).distinct()
 
-    filtro_ambiente = request.POST.get('ambiente', None)
-    filtro_descripcion = request.POST.get('descripcion', None)
-    filtro_estado = request.POST.get('estado', None)
+    filtro_ambiente = request.GET.get('ambiente', None)
+    filtro_descripcion = request.GET.get('descripcion', None)
+    filtro_estado = request.GET.get('estado', None)
 
     queryset = Activo.objects.all()
 
