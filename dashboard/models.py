@@ -21,7 +21,7 @@ class Malla(models.Model):
     año = models.CharField(max_length=4)
 
 class Course(models.Model):
-    school = models.CharField(max_length=100)
+    school = models.ForeignKey(Escuela, on_delete=models.CASCADE)
     code = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=100)
@@ -52,7 +52,7 @@ class Teacher(models.Model):
         ('Main', 'Main'),
     )
 
-    school = models.ForeignKey(Escuela, on_delete=models.CASCADE, default = 1)
+    school = models.ForeignKey(Escuela, on_delete=models.CASCADE)
     surname_and_names = models.CharField(max_length=100)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
